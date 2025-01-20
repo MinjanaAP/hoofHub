@@ -25,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Flutter-Node.js App")),
+      appBar: AppBar(title: Text("hoofhub")),
       body: Center(child: Text(message)),
     );
   }
