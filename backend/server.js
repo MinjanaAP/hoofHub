@@ -1,14 +1,17 @@
 const express = require('express');
 const cors = require('cors');
+const bodyParser = require("body-parser");
+const {auth, db } = require("./config/firebase");
 require('dotenv').config();
+const riderRoutes = require("./routes/rider.routes");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
 app.use(cors());
-app.use(express.json());
+app.use(bodyParser.json());
 
-// Example route
-app.use('/api', require('./routes/index'));
+//!----------- API Routes---------------
+// app.use('/api', require('./routes/index'));
+app.use("/api/riders", riderRoutes);
 
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
