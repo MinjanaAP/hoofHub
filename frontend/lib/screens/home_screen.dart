@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../common/custom_appbar.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -25,7 +26,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("hoofhub")),
+      appBar: const CustomAppBar(
+        title: "HoofHub",
+        showBackButton: false,
+      ),
       body: Center(child: Text(message)),
     );
   }
