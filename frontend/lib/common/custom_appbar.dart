@@ -15,41 +15,43 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text(
-            "hoof",
-            style: TextStyle(
-              fontSize: 16.0,
-              fontWeight: FontWeight.w400,
-              color: Color.fromARGB(255, 250, 250, 250),
-              fontFamily: 'Poppins',
-            ),
-          ),
-          const Padding(
-            padding: EdgeInsets.all(2.0),
-            child: Text(
-              "hub",
+      title: Center(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              "hoof",
               style: TextStyle(
                 fontSize: 16.0,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w400,
                 color: Color.fromARGB(255, 250, 250, 250),
                 fontFamily: 'Poppins',
               ),
             ),
-          ),
-          const SizedBox(width: 5),
-          Transform.rotate(
-            angle: -11.89 * (pi / 180),
-            child: SizedBox(
-              height: 20,
-              child:
-                  Image.asset('assets/images/logo-w.png', fit: BoxFit.contain),
+            const Padding(
+              padding: EdgeInsets.all(2.0),
+              child: Text(
+                "hub",
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w800,
+                  color: Color.fromARGB(255, 250, 250, 250),
+                  fontFamily: 'Poppins',
+                ),
+              ),
             ),
-          )
-        ],
+            const SizedBox(width: 5),
+            Transform.rotate(
+              angle: -11.89 * (pi / 180),
+              child: SizedBox(
+                height: 20,
+                child:
+                    Image.asset('assets/images/logo-w.png', fit: BoxFit.contain),
+              ),
+            )
+          ],
+        ),
       ),
       leading: showBackButton
           ? IconButton(

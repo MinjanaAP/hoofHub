@@ -3,6 +3,8 @@ import '../services/api_service.dart';
 import '../common/custom_appbar.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -31,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         showBackButton: false,
       ),
       body: Center(child: Text(message)),
+      
     );
   }
 }
