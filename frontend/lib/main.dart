@@ -9,7 +9,7 @@ import 'common/bottom_nav_bar.dart';
 void main() {
   runApp(
     DevicePreview(
-      enabled: true, //! Set to false in production
+      enabled: false, //! Set to false in production
       builder: (context) => const MyApp(),
     ),
   );
