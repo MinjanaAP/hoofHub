@@ -1,8 +1,12 @@
+
+
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
 import 'package:frontend/common/signup_text_feild.dart';
 import 'package:frontend/theme.dart';
+import 'package:dio/dio.dart';
+import 'package:logger/logger.dart';
 
 class RiderSignUp extends StatefulWidget {
   const RiderSignUp({super.key});
@@ -12,6 +16,46 @@ class RiderSignUp extends StatefulWidget {
 }
 
 class _RiderSignUpState extends State<RiderSignUp> {
+  String? errorMessage;
+  final Dio dio = Dio();
+  var logger = Logger();
+
+  //? submit signUp form
+  Future<void> signUp() async {
+    try {
+      Response response =
+          await dio.post('http://localhost:8000/api/riders/register', data: {
+        'name': nameController.text,
+        'email': emailController.text,
+        'password': passwordController.text,
+        'mobileNumber': mobileNumberController.text,
+        'role': 'rider'
+      });
+      logger.i(response.data);
+      if (response.data.status) {
+        logger.i(response.data.message);
+        _formKey.currentState!.reset();
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        logger.e('Error Response: ${e.response?.data}');
+        setState(() {
+          errorMessage = '${e.response?.data['error']}';
+        });
+      } else {
+        logger.e('Dio Error: ${e.message}');
+        setState(() {
+          errorMessage = '${e.message}';
+        });
+      }
+    } catch (e) {
+      logger.e('Unexpected Error: $e');
+      setState(() {
+          errorMessage = '$e';
+        });
+    }
+  }
+
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController mobileNumberController = TextEditingController();
@@ -158,7 +202,7 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         height: 7.0,
                       ),
                       CustomTextFormField(
-                        hintText: "Enter your mobile number.", 
+                        hintText: "Enter your mobile number.",
                         controller: mobileNumberController,
                         keyboardType: TextInputType.phone,
                         validator: (value) {
@@ -185,7 +229,7 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         height: 7.0,
                       ),
                       CustomTextFormField(
-                        hintText: "Enter your password.", 
+                        hintText: "Enter your password.",
                         controller: passwordController,
                         obscureText: true,
                         validator: (value) {
@@ -213,7 +257,7 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         height: 7.0,
                       ),
                       CustomTextFormField(
-                        hintText: "Re-enter your Password.", 
+                        hintText: "Re-enter your Password.",
                         controller: confirmPasswordController,
                         obscureText: true,
                         validator: (value) {
@@ -227,6 +271,15 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         },
                         prefixIcon: Icons.lock,
                       ),
+                        // Show error message dynamically
+                      if (errorMessage != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            errorMessage!,
+                            style: const TextStyle(color: Colors.red, fontSize: 14),
+                          ),
+                        ),
                       const SizedBox(height: 30.0),
                       SizedBox(
                         width: double.infinity,
@@ -234,11 +287,7 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         child: ElevatedButton(
                           onPressed: () {
                             if (_formKey.currentState!.validate()) {
-                              // Form is valid, proceed with submission
-                              print("Full Name: ${nameController.text}");
-                              print("Email: ${emailController.text}");
-                              print("Password: ${passwordController.text}");
-                              // Add your signup logic here
+                              signUp();
                             }
                           },
                           style: ElevatedButton.styleFrom(
@@ -255,25 +304,23 @@ class _RiderSignUpState extends State<RiderSignUp> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                        Text(
-                          'Already have an account ?',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w300,
-                            color: AppColors.primary
+                          Text(
+                            'Already have an account ?',
+                            style: TextStyle(
+                                fontSize: 14.0,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w300,
+                                color: AppColors.primary),
                           ),
-                        ),
-                        SizedBox(width: 5.0),
-                        Text(
-                          'Sign In',
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            fontFamily: 'Poppins',
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.primary
+                          SizedBox(width: 5.0),
+                          Text(
+                            'Sign In',
+                            style: TextStyle(
+                                fontSize: 14.0,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.w900,
+                                color: AppColors.primary),
                           ),
-                        ),
                         ],
                       ),
                       const SizedBox(height: 30.0),

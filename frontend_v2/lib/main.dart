@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/auth_provider.dart';
+import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_signup.dart';
 import 'package:frontend/screens/starting_page.dart';
+import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/landing_page.dart';
 import 'package:device_preview/device_preview.dart';
 import 'common/bottom_nav_bar.dart';
 
+
 void main() {
   runApp(
     DevicePreview(
-      enabled: true, //! Set to false in production
-      builder: (context) => const MyApp(),
+      enabled: true, // Set to false in production
+      builder: (context) => MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }
@@ -25,7 +34,8 @@ class MyApp extends StatelessWidget {
       useInheritedMediaQuery: true, // Ensures media queries adapt to preview
       debugShowCheckedModeBanner: false,
       // home:  HomeScreen(),
-      home: RiderSignUp(),
+      // home: RiderSignUp(),
+      home: RiderLoginScreen(),
     );
   }
 }

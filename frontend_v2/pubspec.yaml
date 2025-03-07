@@ -39,6 +39,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   dio: ^5.8.0+1
+  logger: ^2.5.0
+  firebase_auth: ^5.5.1
+  provider: ^6.0.5
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +69,8 @@ flutter:
   assets:
     - assets/images/logo-w.png
     - assets/images/logoColor.png
+    - assets/images/g.png
+    - assets/images/facebook.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
