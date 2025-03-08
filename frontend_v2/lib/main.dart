@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/auth_provider.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_signup.dart';
+import 'package:frontend/screens/select_profile.dart';
 import 'package:frontend/screens/starting_page.dart';
 import 'package:provider/provider.dart';
 import 'screens/home_screen.dart';
@@ -29,13 +31,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       builder: DevicePreview.appBuilder, // Add this to apply preview settings
       useInheritedMediaQuery: true, // Ensures media queries adapt to preview
       debugShowCheckedModeBanner: false,
-      // home:  HomeScreen(),
-      // home: RiderSignUp(),
-      home: RiderLoginScreen(),
+      initialRoute: AppRoutes.startingPage,
+      routes: AppRoutes.routes,
     );
   }
 }
