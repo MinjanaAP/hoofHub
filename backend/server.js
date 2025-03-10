@@ -10,7 +10,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 //!----------- API Routes---------------
-// app.use('/api', require('./routes/index'));
+app.use('/api', require('./routes/index'));
 app.use("/api/riders", riderRoutes);
 
 const PORT = process.env.PORT || 8000;

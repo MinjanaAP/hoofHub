@@ -1,21 +1,19 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:frontend/screens/riderScreens/rider_login.dart';
-import 'package:frontend/screens/riderScreens/rider_signup.dart';
-import 'package:frontend/screens/select_profile.dart';
-import 'package:frontend/screens/starting_page.dart';
 import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
-import 'screens/landing_page.dart';
 import 'package:device_preview/device_preview.dart';
-import 'common/bottom_nav_bar.dart';
+import 'firebase_options.dart';
 
-
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, 
+  );
   runApp(
     DevicePreview(
-      enabled: true, // Set to false in production
+      enabled: true, //! Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProvider()),

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
@@ -7,8 +6,7 @@ import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/theme.dart';
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/screens/home_screen.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RiderLoginScreen extends StatefulWidget {
   const RiderLoginScreen({super.key});
@@ -21,11 +19,30 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  Future<void> loginUser() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+      print("Login successful: ${userCredential.user!.email}");
+      //? Navigate to home screen
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+    } catch (e) {
+      print("Login Failed: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Login Failed: ${e.toString()}")),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -163,32 +180,8 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                                     shadowColor: Colors.black,
                                     elevation: 8,
                                   ),
-                                  onPressed: authProvider.isLoading
-                                      ? null
-                                      : () async {
-                                          if (_formKey.currentState!.validate()) {
-                                            String? error = await authProvider.login(
-                                              emailController.text,
-                                              passwordController.text,
-                                            );
-
-                                            if (error == null) {
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                    builder: (context) => HomeScreen()
-                                                ),
-                                              );
-                                            } else {
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text(error)),
-                                              );
-                                            }
-                                          }
-                                        },
-                                  child: authProvider.isLoading
-                                      ? const CircularProgressIndicator()
-                                      : const Text("Login"),
+                                  onPressed: loginUser,
+                                  child: const Text("Login"),
                                 ),
                               ),
                             ],
