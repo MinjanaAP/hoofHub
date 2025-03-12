@@ -1,12 +1,13 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
 import 'package:frontend/common/signup_text_feild.dart';
-import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/theme.dart';
-import 'package:frontend/providers/auth_provider.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:logger/logger.dart';
 
 class RiderLoginScreen extends StatefulWidget {
   const RiderLoginScreen({super.key});
@@ -16,34 +17,74 @@ class RiderLoginScreen extends StatefulWidget {
 }
 
 class _RiderLoginScreenState extends State<RiderLoginScreen> {
+  late String errorText;
+
+  @override
+  void initState() {
+    super.initState();
+    errorText = '';
+  }
+
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  var logger = Logger();
 
   Future<void> loginUser() async {
+    setState(() {
+      errorText = '';
+    });
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      print("Login successful: ${userCredential.user!.email}");
+      logger.i("Login successful: ${userCredential.user!.email}");
       //? Navigate to home screen
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case "invalid-credential":
+          errorMessage = "Invalid email or password.";
+          break;
+        case "user-not-found":
+          errorMessage = "No user found with this email.";
+          break;
+        case "wrong-password":
+          errorMessage = "Incorrect email or password.";
+          break;
+        case "user-disabled":
+          errorMessage = "This account has been disabled.";
+          break;
+        case "too-many-request":
+          errorMessage = "Too many login attempts. Try again later.";
+          break;
+        default:
+          errorMessage = "Login failed : ${e.message}";
+      }
+      logger.e("Login failed : ${e}");
+
+      setState(() {
+        errorText = errorMessage;
+      });
     } catch (e) {
-      print("Login Failed: $e");
+      logger.e("Login Failed: $e");
+      setState(() {
+        errorText = "An unexpected error occurred. Please try again.";
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login Failed: ${e.toString()}")),
+        const SnackBar(
+            content: Text("An unexpected error occurred. Please try again.")),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: const CustomAppBar(
@@ -134,7 +175,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                                 controller: emailController,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
-                                    return "please enter your email.";
+                                    return "Please enter your email.";
                                   }
                                   if (!RegExp(
                                           r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
@@ -170,6 +211,18 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                               const SizedBox(
                                 height: 21.0,
                               ),
+                              if (errorText.isNotEmpty)
+                                Center(
+                                  child: Text(
+                                    errorText,
+                                    style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 12.0,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
                               SizedBox(
                                 width: double.infinity,
                                 height: 48.0,
@@ -180,7 +233,11 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                                     shadowColor: Colors.black,
                                     elevation: 8,
                                   ),
-                                  onPressed: loginUser,
+                                  onPressed: () {
+                                    if (_formKey.currentState!.validate()) {
+                                      loginUser();
+                                    }
+                                  },
                                   child: const Text("Login"),
                                 ),
                               ),

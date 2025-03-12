@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 
 class LandingPage extends StatefulWidget {
@@ -32,9 +33,9 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   void _navigateToNextPage() {
-    Navigator.pushReplacement(
+    Navigator.pushReplacementNamed(
       context,
-      MaterialPageRoute(builder: (context) => const RiderLoginScreen()),
+      AppRoutes.riderLogin
     );
   }
 
