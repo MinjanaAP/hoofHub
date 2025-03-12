@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:frontend/screens/riderScreens/rider_login.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});

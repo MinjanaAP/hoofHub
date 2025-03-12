@@ -1,5 +1,3 @@
-import 'dart:js_interop';
-
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';

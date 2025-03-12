@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:frontend/theme.dart';
 
 class SelectProfile extends StatelessWidget {
   const SelectProfile({super.key});
