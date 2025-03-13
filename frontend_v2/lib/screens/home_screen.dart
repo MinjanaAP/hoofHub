@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
+import 'package:frontend/common/greetin_card.dart';
 import 'package:frontend/common/home_appbar.dart';
+import 'package:frontend/common/home_carousel.dart';
+import 'package:frontend/common/home_search_bar.dart';
 import 'package:frontend/theme.dart';
 import '../services/api_service.dart';
 
@@ -30,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: const HomeAppBar(),
       drawer: Drawer(
         child: ListView(
@@ -89,7 +93,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Center(child: Text(message)),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              children: [
+                const GreetingCard(),
+                HomeCarousel(),
+                HomeSearchBar(),
+                Text(message),
+              ],
+            ),
+          ),
+        ),
+      ),
       bottomNavigationBar: const BottomNavBar(),
     );
   }
