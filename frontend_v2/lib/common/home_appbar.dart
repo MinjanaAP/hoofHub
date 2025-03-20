@@ -1,5 +1,7 @@
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/web.dart';
 
@@ -18,6 +20,8 @@ class _HomeAppBarState extends State<HomeAppBar> {
 
   @override
   Widget build(BuildContext context) {
+    final User? user = FirebaseAuth.instance.currentUser;
+
     return AppBar(
       backgroundColor: AppColors.primary,
       elevation: 0,
@@ -68,10 +72,17 @@ class _HomeAppBarState extends State<HomeAppBar> {
                 ),
               ],
             ),
-            const CircleAvatar(
-              radius: 20.0,
-              backgroundImage: AssetImage('assets/images/profilePic.jpg'),
-            ),
+            user != null
+                ? const CircleAvatar(
+                    radius: 20.0,
+                    backgroundImage: AssetImage('assets/images/profilePic.jpg'),
+                  )
+                : ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pushReplacementNamed(
+                          context, AppRoutes.riderLogin);
+                    },
+                    label: const Text("Login"))
           ],
         ),
       ),

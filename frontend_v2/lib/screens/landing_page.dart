@@ -1,6 +1,11 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/screens/riderScreens/rider_login.dart';
+import 'package:frontend/screens/riderScreens/rider_signup.dart';
+import 'package:frontend/screens/select_profile.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -15,13 +20,13 @@ class _LandingPageState extends State<LandingPage> {
   @override
   void initState() {
     super.initState();
-    _startProgress(); 
+    _startProgress();
   }
 
   void _startProgress() {
-    Timer.periodic(const Duration(milliseconds: 100), (timer) { 
+    Timer.periodic(const Duration(milliseconds: 100), (timer) {
       setState(() {
-        _progress += 0.05; 
+        _progress += 0.05;
 
         if (_progress >= 1.0) {
           timer.cancel();
@@ -32,10 +37,11 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   void _navigateToNextPage() {
-    Navigator.pushReplacementNamed(
-      context,
-      AppRoutes.riderLogin
-    );
+    // Navigator.pushReplacementNamed(context, AppRoutes.riderLogin);
+    Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => AuthCheck()), 
+  );
   }
 
   @override
@@ -79,16 +85,16 @@ class _LandingPageState extends State<LandingPage> {
             ),
           ),
           Align(
-            alignment: Alignment.bottomCenter, 
+            alignment: Alignment.bottomCenter,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 30, left: 30, right: 30),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(10), 
+                borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
                   value: _progress,
                   backgroundColor: Colors.grey[300],
-                  color: const Color.fromARGB(255, 114, 53, 147), 
-                  minHeight: 2, 
+                  color: const Color.fromARGB(255, 114, 53, 147),
+                  minHeight: 2,
                 ),
               ),
             ),
@@ -96,5 +102,24 @@ class _LandingPageState extends State<LandingPage> {
         ],
       ),
     );
+  }
+}
+
+//? Auth check-------------------
+class AuthCheck extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            // TODO : create loading page
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData) {
+            return  const HomeScreen();
+          } else {
+            return  const SelectProfile();
+          }
+        });
   }
 }

@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 
-class AuthProvider with ChangeNotifier {
+class AuthProviders with ChangeNotifier {
   final AuthService _authService = AuthService();
   bool _isLoading = false;
   UserCredential? _userCredential;

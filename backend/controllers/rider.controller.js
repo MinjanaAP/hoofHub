@@ -15,7 +15,7 @@ exports.registerRider = async (req , res )=>{
             password,
             displayName: name,
         });
-        const newRider = new Rider(userRecord.uid, name, email, role, mobileNumber);
+        const newRider = new Rider(userRecord.uid, name, email,mobileNumber, role);
         await db.collection("riders").doc(userRecord.uid).set(newRider.toFireStore());
         res.status(201).json({
             status: true,

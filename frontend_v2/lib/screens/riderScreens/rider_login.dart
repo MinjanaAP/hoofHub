@@ -3,6 +3,7 @@ import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
 import 'package:frontend/common/signup_text_feild.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:logger/logger.dart';
@@ -16,6 +17,7 @@ class RiderLoginScreen extends StatefulWidget {
 
 class _RiderLoginScreenState extends State<RiderLoginScreen> {
   late String errorText;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
   Future<void> loginUser() async {
     setState(() {
       errorText = '';
+      _isLoading = true;
     });
     try {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
@@ -42,7 +45,9 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
       );
       logger.i("Login successful: ${userCredential.user!.email}");
       //? Navigate to home screen
-      Navigator.pushReplacementNamed(context, AppRoutes.home);
+      // Navigator.pushReplacementNamed(context, HomeScreen());
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => const HomeScreen()));
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -78,6 +83,8 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
         const SnackBar(
             content: Text("An unexpected error occurred. Please try again.")),
       );
+    } finally {
+      _isLoading = false;
     }
   }
 
@@ -87,7 +94,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
       resizeToAvoidBottomInset: true,
       appBar: const CustomAppBar(
         title: "hoofHub",
-        showBackButton: true,
+        showBackButton: false,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -211,14 +218,18 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                               ),
                               if (errorText.isNotEmpty)
                                 Center(
-                                  child: Text(
-                                    errorText,
-                                    style: const TextStyle(
+                                  child: Padding(
+                                    padding:
+                                        const EdgeInsets.fromLTRB(0, 0, 0, 10),
+                                    child: Text(
+                                      errorText,
+                                      style: const TextStyle(
                                         color: Colors.red,
                                         fontSize: 12.0,
                                         fontFamily: 'Poppins',
                                         fontWeight: FontWeight.w500,
-                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               SizedBox(
@@ -236,7 +247,18 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                                       loginUser();
                                     }
                                   },
-                                  child: const Text("Login"),
+                                  child: _isLoading
+                                  ? const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text("Login..."),
+                                        SizedBox(width: 10),
+                                        CircularProgressIndicator(
+                                          color: Colors.white, 
+                                        ),
+                                      ],
+                                    )
+                                  : const Text("Login"),
                                 ),
                               ),
                             ],
@@ -259,11 +281,11 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                 const SizedBox(
                   height: 8.0,
                 ),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
+                    const Text(
                       'Don’t have an account ? ',
                       style: TextStyle(
                         fontSize: 13.0,
@@ -272,16 +294,22 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                         fontFamily: 'Poppins',
                       ),
                     ),
-                    SizedBox(
+                    const SizedBox(
                       height: 6,
                     ),
-                    Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 13.0,
-                        fontWeight: FontWeight.w900,
-                        color: AppColors.primary,
-                        fontFamily: 'Poppins',
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(
+                            context, AppRoutes.riderSignUp);
+                      },
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          fontSize: 13.0,
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                          fontFamily: 'Poppins',
+                        ),
                       ),
                     ),
                   ],

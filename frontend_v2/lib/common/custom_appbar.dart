@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/theme.dart';
 
@@ -14,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return AppBar(
       title: Center(
         child: Row(
@@ -46,8 +48,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               angle: -11.89 * (pi / 180),
               child: SizedBox(
                 height: 20,
-                child:
-                    Image.asset('assets/images/logo-w.png', fit: BoxFit.contain),
+                child: Image.asset('assets/images/logo-w.png',
+                    fit: BoxFit.contain),
               ),
             )
           ],
