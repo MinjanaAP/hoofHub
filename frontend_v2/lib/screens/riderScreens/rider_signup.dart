@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
 import 'package:frontend/common/signup_text_feild.dart';
+import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/theme.dart';
@@ -30,7 +31,7 @@ class _RiderSignUpState extends State<RiderSignUp> {
     });
     try {
       Response response =
-          await dio.post('http://localhost:8000/api/riders/register', data: {
+          await dio.post("${ApiConstants.baseUrl}/riders/register", data: {
         'name': nameController.text,
         'email': emailController.text,
         'password': passwordController.text,
