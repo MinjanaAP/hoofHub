@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
- Widget _buildMostPopularRides() {
+Widget _buildMostPopularRides() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

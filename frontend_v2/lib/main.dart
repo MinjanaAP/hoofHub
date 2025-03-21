@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
       builder: DevicePreview.appBuilder, // Add this to apply preview settings
       useInheritedMediaQuery: true, // Ensures media queries adapt to preview
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.startingPage,
+      initialRoute: AppRoutes.guideSignup,
       routes: AppRoutes.routes,
     );
   }
