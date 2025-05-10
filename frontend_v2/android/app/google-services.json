@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "790831491577",
+    "project_id": "hoofhub-70999",
+    "storage_bucket": "hoofhub-70999.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:790831491577:android:829fdb4a7996ecbcf77528",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaJY3nRuxs2FAnURgbqqto7R-TaGr5fXU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
