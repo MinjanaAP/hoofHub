@@ -135,7 +135,9 @@ class SelectProfile extends StatelessWidget {
                               elevation: 8,
                             ),
                             onPressed: () {
-                              print("navigate guide login");
+                              Navigator.pushNamed(
+                                  context, AppRoutes.guideSignup
+                                  );
                             },
                             child: const Text(
                               'Guide',

@@ -16,7 +16,7 @@ void main() async {
   );
   runApp(
     DevicePreview(
-      enabled: true, //! Set to false in production
+      enabled: false, //! Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProviders()),

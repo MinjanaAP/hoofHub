@@ -103,7 +103,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
               children: [
                 const Padding(
                   padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                  child: HoofHubText(),
+                  child: HoofHubText(text: "Ride",),
                 ),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -344,7 +344,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                 const Divider(
                   color: Color.fromARGB(23, 114, 53, 148),
                   thickness: 1,
-                  indent: 20,
+                  indent: 20, 
                   endIndent: 20,
                 ),
                 const SizedBox(
