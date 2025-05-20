@@ -16,7 +16,7 @@ void main() async {
   );
   runApp(
     DevicePreview(
-      enabled: true, //! Set to false in production
+      enabled: false, //! Set to false in production
       builder: (context) => MultiProvider(
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProviders()),
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
       builder: DevicePreview.appBuilder, // Add this to apply preview settings
       useInheritedMediaQuery: true, // Ensures media queries adapt to preview
       debugShowCheckedModeBanner: false,
-      initialRoute: AppRoutes.guideSignup,
+      initialRoute: AppRoutes.startingPage,
       routes: AppRoutes.routes,
     );
   }
