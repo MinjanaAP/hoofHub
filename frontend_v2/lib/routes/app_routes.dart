@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/guideScreens/guide_login.dart';
 import 'package:frontend/screens/guideScreens/guide_signup.dart';
 import 'package:frontend/screens/landing_page.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
@@ -17,6 +18,7 @@ class AppRoutes {
 
   //? Guide Routes
   static const String guideSignup = '/guideSignup';
+  static const String guideLogin = '/guideLogin';
 
   //? Other Routes
   static const String selectProfile = '/selectProfile';
@@ -34,6 +36,7 @@ class AppRoutes {
 
     //? Guide Routes
     guideSignup: (context) => const GuideSignup(),
+    guideLogin: (context) => const GuideLogin(),
 
     //?Other Routes
     startingPage: (context) => const StartingPage(),

@@ -47,7 +47,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
       //? Navigate to home screen
       // Navigator.pushReplacementNamed(context, HomeScreen());
       Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => const HomeScreen()));
+          .pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {

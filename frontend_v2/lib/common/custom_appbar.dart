@@ -10,7 +10,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     required this.title,
-    this.showBackButton = true,
+    this.showBackButton = false,
   }) : super(key: key);
 
   @override
@@ -56,10 +56,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         ),
       ),
       leading: showBackButton
-          ? IconButton(
+          ? BackButton(
               onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back))
-          : null,
+              color: Colors.white,
+          )
+          : const SizedBox.shrink(),
       backgroundColor: AppColors.primary,
     );
   }
