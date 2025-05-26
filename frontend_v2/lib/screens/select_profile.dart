@@ -136,7 +136,7 @@ class SelectProfile extends StatelessWidget {
                             ),
                             onPressed: () {
                               Navigator.pushNamed(
-                                  context, AppRoutes.guideSignup
+                                  context, AppRoutes.guideLogin
                                   );
                             },
                             child: const Text(
