@@ -1,10 +1,14 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ProfileImagePicker extends StatefulWidget {
-  const ProfileImagePicker({super.key});
+  final Function(String) onImageSelected; // Callback to return image path
+  
+  const ProfileImagePicker({
+    super.key,
+    required this.onImageSelected,
+  });
 
   @override
   State<ProfileImagePicker> createState() => _ProfileImagePickerState();
@@ -21,6 +25,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
       setState(() {
         _selectedImage = File(pickedFile.path);
       });
+      widget.onImageSelected(pickedFile.path); // Return the image path
     }
   }
 
@@ -41,7 +46,7 @@ class _ProfileImagePickerState extends State<ProfileImagePicker> {
         ),
         const SizedBox(height: 10),
         ElevatedButton.icon(
-          onPressed: () => _pickImage(ImageSource.camera),  // Pick from camera
+          onPressed: () => _pickImage(ImageSource.camera),
           icon: const Icon(Icons.camera),
           label: const Text("Take a Photo"),
         ),
