@@ -16,12 +16,14 @@ class GuideModel extends ChangeNotifier {
   int horseAge = 0;
   String horseColor = "";
   String horseSpecialNotes = "";
+  List<String> horseImagePaths = [];
 
   // Guide profile details
   String profileImagePath = "";
   String bio = "";
   String experience = "";
   List<String> languages = [];
+
 
   void updateFullName(String newName) {
     fullName = newName;

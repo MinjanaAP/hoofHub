@@ -11,6 +11,7 @@ import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/guide_model.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/theme.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:logger/web.dart';
 import 'package:provider/provider.dart';
 import 'package:http/http.dart' as http;
@@ -33,8 +34,24 @@ class _GuideSignupState extends State<GuideSignup> {
     GlobalKey<FormState>(),
   ];
 
-  //Firebase Auth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  // horse image picker
+  List<XFile> selectedHorseImages = [];
+
+  Future<void> pickHorseImages() async {
+    final ImagePicker picker = ImagePicker();
+    final List<XFile> images = await picker.pickMultiImage();
+    if (images.length <= 5) {
+      setState(() {
+        selectedHorseImages = images;
+        Provider.of<GuideModel>(context, listen: false).horseImagePaths =
+            images.map((img) => img.path).toList();
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("You can only upload up to 5 images")),
+      );
+    }
+  }
 
   // Controllers for step 1 (Guide Details)
   final TextEditingController nameController = TextEditingController();
@@ -136,86 +153,99 @@ class _GuideSignupState extends State<GuideSignup> {
 
       setState(() => _isLoading = true);
 
-      logger.i("Guide Data: ${formData.fullName}, ${formData.profileImagePath}");
+      logger
+          .i("Guide Data: ${formData.fullName}, ${formData.profileImagePath}");
       logger.i("Horse Data: ${formData.horseName}, ${formData.horseBreed}");
       logger.i("Profile Data: ${formData.bio}, ${formData.experience}");
 
       // TODO: Implement form submission
       // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
-       try {
-      var request = http.MultipartRequest(
-        'POST',
-        Uri.parse('${ApiConstants.baseUrl}/guides/register'),
-      );
-
-      request.fields['fullName'] = formData.fullName;
-      request.fields['email'] = formData.email;
-      request.fields['password'] = formData.password;
-      request.fields['address'] = formData.address;
-      request.fields['nic'] = formData.nic;
-      request.fields['mobileNumber'] = formData.mobileNumber;
-      request.fields['age'] = formData.age.toString();
-      request.fields['gender'] = formData.gender;
-
-      request.fields['horseName'] = formData.horseName;
-      request.fields['horseBreed'] = formData.horseBreed;
-      request.fields['horseAge'] = formData.horseAge.toString();
-      request.fields['horseColor'] = formData.horseColor;
-      request.fields['horseSpecialNotes'] = formData.horseSpecialNotes;
-
-      request.fields['bio'] = formData.bio;
-      request.fields['experience'] = formData.experience;
-      request.fields['languages'] = formData.languages.join(',');
-
-      // Attach image
-      if (formData.profileImagePath.isNotEmpty) {
-        File imageFile = File(formData.profileImagePath);
-        request.files.add(await http.MultipartFile.fromPath(
-          'profileImage',
-          imageFile.path,
-          filename: imageFile.path,
-        ));
-      }
-
-      var response = await request.send();
-      if (response.statusCode == 201) {
-        logger.i("Guide created successfully.");
-        // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
-      
-      if (!mounted) return;
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text("You're All Set!"),
-              content: const Text("Signup successful. Please login to continue."),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(); 
-                    Navigator.pushReplacementNamed(context, AppRoutes.guideLogin); 
-                  },
-                  child: const Text("OK"),
-                ),
-              ],
-            );
-          },
+      try {
+        var request = http.MultipartRequest(
+          'POST',
+          Uri.parse('${ApiConstants.baseUrl}/guides/register'),
         );
-      } else {
-        logger.e("Failed to register. Code: ${response.statusCode}");
+
+        request.fields['fullName'] = formData.fullName;
+        request.fields['email'] = formData.email;
+        request.fields['password'] = formData.password;
+        request.fields['address'] = formData.address;
+        request.fields['nic'] = formData.nic;
+        request.fields['mobileNumber'] = formData.mobileNumber;
+        request.fields['age'] = formData.age.toString();
+        request.fields['gender'] = formData.gender;
+
+        request.fields['horseName'] = formData.horseName;
+        request.fields['horseBreed'] = formData.horseBreed;
+        request.fields['horseAge'] = formData.horseAge.toString();
+        request.fields['horseColor'] = formData.horseColor;
+        request.fields['horseSpecialNotes'] = formData.horseSpecialNotes;
+
+        request.fields['bio'] = formData.bio;
+        request.fields['experience'] = formData.experience;
+        request.fields['languages'] = formData.languages.join(',');
+
+        // Attach image
+        if (formData.profileImagePath.isNotEmpty) {
+          File imageFile = File(formData.profileImagePath);
+          request.files.add(await http.MultipartFile.fromPath(
+            'profileImage',
+            imageFile.path,
+            filename: imageFile.path,
+          ));
+        }
+
+        // Attach horse images
+        for (int i = 0; i < formData.horseImagePaths.length; i++) {
+          File imageFile = File(formData.horseImagePaths[i]);
+          request.files.add(await http.MultipartFile.fromPath(
+            'horseImages', 
+            imageFile.path,
+            filename: 'horse_$i.jpg',
+          ));
+        }
+
+        var response = await request.send();
+        if (response.statusCode == 201) {
+          logger.i("Guide created successfully.");
+          // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
+
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text("You're All Set!"),
+                content:
+                    const Text("Signup successful. Please login to continue."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      Navigator.pushReplacementNamed(
+                          context, AppRoutes.guideLogin);
+                    },
+                    child: const Text("OK"),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          logger.e("Failed to register. Code: ${response.statusCode}");
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to register. Please try again.')),
+          );
+        }
+      } catch (e) {
+        logger.e("Submission error: $e");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to register. Please try again.')),
+          SnackBar(content: Text('Something went wrong: $e')),
         );
+      } finally {
+        setState(() => _isLoading = false);
       }
-    } catch (e) {
-      logger.e("Submission error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Something went wrong: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
     }
   }
 
@@ -608,6 +638,32 @@ class _GuideSignupState extends State<GuideSignup> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 16),
+            const Text(
+              "Horse Images (max 5)",
+              style: TextStyle(
+                fontSize: 14.0,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 7),
+            ElevatedButton(
+              onPressed: pickHorseImages,
+              child: const Text("Select Images"),
+            ),
+            Wrap(
+              spacing: 10,
+              children: selectedHorseImages.map((img) {
+                return Image.file(
+                  File(img.path),
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                );
+              }).toList(),
+            ),
             const Text(
               "Horse Name",
               style: TextStyle(
