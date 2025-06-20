@@ -10,14 +10,13 @@ class GuideModel extends ChangeNotifier {
   int age = 0;
   String gender = "Male";
 
-
   // Horse details
   String horseName = "";
   String horseBreed = "";
   int horseAge = 0;
   String horseColor = "";
   String horseSpecialNotes = "";
-  
+
   // Guide profile details
   String profileImagePath = "";
   String bio = "";
@@ -68,43 +67,43 @@ class GuideModel extends ChangeNotifier {
     horseName = newName;
     notifyListeners();
   }
-  
+
   void updateHorseBreed(String newBreed) {
     horseBreed = newBreed;
     notifyListeners();
   }
-  
+
   void updateHorseAge(int newAge) {
     horseAge = newAge;
     notifyListeners();
   }
-  
+
   void updateHorseColor(String newColor) {
     horseColor = newColor;
     notifyListeners();
   }
-  
+
   void updateHorseSpecialNotes(String newNotes) {
     horseSpecialNotes = newNotes;
     notifyListeners();
   }
-  
+
   // Add new update methods for profile details
   void updateProfileImage(String path) {
     profileImagePath = path;
     notifyListeners();
   }
-  
+
   void updateBio(String newBio) {
     bio = newBio;
     notifyListeners();
   }
-  
+
   void updateExperience(String newExp) {
     experience = newExp;
     notifyListeners();
   }
-  
+
   void updateLanguages(List<String> newLanguages) {
     languages = newLanguages;
     notifyListeners();

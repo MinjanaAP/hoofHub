@@ -1,12 +1,19 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/hoof_ride_text.dart';
 import 'package:frontend/common/profile_image_picker.dart';
 import 'package:frontend/common/signup_text_feild.dart';
+import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/guide_model.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/web.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
 
 class GuideSignup extends StatefulWidget {
   const GuideSignup({super.key});
@@ -26,9 +33,15 @@ class _GuideSignupState extends State<GuideSignup> {
     GlobalKey<FormState>(),
   ];
 
+  //Firebase Auth
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   // Controllers for step 1 (Guide Details)
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   final TextEditingController addressController = TextEditingController();
   final TextEditingController nicController = TextEditingController();
   final TextEditingController mobileNumberController = TextEditingController();
@@ -51,6 +64,8 @@ class _GuideSignupState extends State<GuideSignup> {
   void dispose() {
     nameController.dispose();
     emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
     addressController.dispose();
     nicController.dispose();
     mobileNumberController.dispose();
@@ -96,6 +111,7 @@ class _GuideSignupState extends State<GuideSignup> {
     if (_currentStep == 0) {
       formData.updateFullName(nameController.text);
       formData.updateEmail(emailController.text);
+      formData.updatePassword(passwordController.text);
       formData.updateAddress(addressController.text);
       formData.updateNic(nicController.text);
       formData.updateMobileNumber(mobileNumberController.text);
@@ -110,7 +126,7 @@ class _GuideSignupState extends State<GuideSignup> {
     }
   }
 
-  void submitForm() {
+  void submitForm() async {
     if (_formKeys[2].currentState!.validate()) {
       final formData = Provider.of<GuideModel>(context, listen: false);
 
@@ -120,12 +136,86 @@ class _GuideSignupState extends State<GuideSignup> {
 
       setState(() => _isLoading = true);
 
-      logger.i("Guide Data: ${formData.fullName}, ${formData.email}");
+      logger.i("Guide Data: ${formData.fullName}, ${formData.profileImagePath}");
       logger.i("Horse Data: ${formData.horseName}, ${formData.horseBreed}");
       logger.i("Profile Data: ${formData.bio}, ${formData.experience}");
 
       // TODO: Implement form submission
       // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
+       try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('${ApiConstants.baseUrl}/guides/register'),
+      );
+
+      request.fields['fullName'] = formData.fullName;
+      request.fields['email'] = formData.email;
+      request.fields['password'] = formData.password;
+      request.fields['address'] = formData.address;
+      request.fields['nic'] = formData.nic;
+      request.fields['mobileNumber'] = formData.mobileNumber;
+      request.fields['age'] = formData.age.toString();
+      request.fields['gender'] = formData.gender;
+
+      request.fields['horseName'] = formData.horseName;
+      request.fields['horseBreed'] = formData.horseBreed;
+      request.fields['horseAge'] = formData.horseAge.toString();
+      request.fields['horseColor'] = formData.horseColor;
+      request.fields['horseSpecialNotes'] = formData.horseSpecialNotes;
+
+      request.fields['bio'] = formData.bio;
+      request.fields['experience'] = formData.experience;
+      request.fields['languages'] = formData.languages.join(',');
+
+      // Attach image
+      if (formData.profileImagePath.isNotEmpty) {
+        File imageFile = File(formData.profileImagePath);
+        request.files.add(await http.MultipartFile.fromPath(
+          'profileImage',
+          imageFile.path,
+          filename: imageFile.path,
+        ));
+      }
+
+      var response = await request.send();
+      if (response.statusCode == 201) {
+        logger.i("Guide created successfully.");
+        // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
+      
+      if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text("You're All Set!"),
+              content: const Text("Signup successful. Please login to continue."),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); 
+                    Navigator.pushReplacementNamed(context, AppRoutes.guideLogin); 
+                  },
+                  child: const Text("OK"),
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        logger.e("Failed to register. Code: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to register. Please try again.')),
+        );
+      }
+    } catch (e) {
+      logger.e("Submission error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Something went wrong: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
     }
   }
 
@@ -274,6 +364,63 @@ class _GuideSignupState extends State<GuideSignup> {
                 }
                 return null;
               },
+            ),
+            const SizedBox(
+              height: 21.0,
+            ),
+            const Text(
+              "Password",
+              style: TextStyle(
+                  fontSize: 14.0,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary),
+            ),
+            const SizedBox(
+              height: 7.0,
+            ),
+            CustomTextFormField(
+              hintText: "Enter your password.",
+              controller: passwordController,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter a password.";
+                }
+                if (value.length < 6) {
+                  return "Password must be at least 6 characters long.";
+                }
+                return null;
+              },
+            ),
+            const SizedBox(
+              height: 21.0,
+            ),
+            const Text(
+              "Confirm Password",
+              style: TextStyle(
+                  fontSize: 14.0,
+                  fontFamily: 'Poppins',
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary),
+            ),
+            const SizedBox(
+              height: 7.0,
+            ),
+            CustomTextFormField(
+              hintText: "Re-enter your Password.",
+              controller: confirmPasswordController,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please confirm your password.";
+                }
+                if (value != passwordController.text) {
+                  return "Passwords do not match.";
+                }
+                return null;
+              },
+              prefixIcon: Icons.lock,
             ),
             const SizedBox(height: 21.0),
             const Text(
