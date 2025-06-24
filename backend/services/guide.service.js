@@ -1,5 +1,7 @@
 import { db } from "../config/firebase.js";
 import saveHorseToFirestore from "./horse.service.js";
+import userService from "./user.service.js";
+import saveUserRole from "./user.service.js";
 
 export const saveGuideToFirestore = async (uid, guideData) => {
     try {
@@ -17,7 +19,12 @@ export const saveGuideToFirestore = async (uid, guideData) => {
 export const createGuideWithHorse = async (uid, guideData, horseData) => {
     const horseId = await saveHorseToFirestore(horseData);
     guideData.horseId = horseId;
-
+    const userData = {
+        uid: uid,
+        role:'guide'
+    }
+    const roleId = await userService.saveUserRole(userData);
+    guideData.roleId = roleId;
     try {
         const guideRef = db.collection("guides").doc(uid);
         await guideRef.set({

@@ -1,5 +1,7 @@
 import { auth, db } from "../config/firebase.js";
 import Rider from "../models/rider.model.js";
+import userService from "../services/user.service.js";
+
 
 export const registerRider = async (req , res )=>{
     try {
@@ -15,7 +17,13 @@ export const registerRider = async (req , res )=>{
             password,
             displayName: name,
         });
-        const newRider = new Rider(userRecord.uid, name, email,mobileNumber, role);
+
+        const roleData = {
+            uid:userRecord.uid,
+            role:'rider'
+        }
+        const roleId = await userService.saveUserRole(roleData);
+        const newRider = new Rider(userRecord.uid, name, email,mobileNumber, roleId);
         await db.collection("riders").doc(userRecord.uid).set(newRider.toFireStore());
         res.status(201).json({
             status: true,

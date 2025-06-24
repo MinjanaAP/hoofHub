@@ -7,6 +7,7 @@ import { auth, db } from './config/firebase.js';
 import riderRoutes from './routes/rider.routes.js';
 import guideRoutes from './routes/guide.routes.js';
 import indexRoutes from './routes/index.js';
+import userRoutes from './routes/user.routes.js'
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(bodyParser.json());
 app.use('/api', indexRoutes);
 app.use("/api/riders", riderRoutes);
 app.use("/api/guides", guideRoutes);
+app.use("/api/users",userRoutes);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
