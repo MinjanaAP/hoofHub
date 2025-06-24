@@ -1,4 +1,4 @@
-class Rider {
+export default class Rider {
     constructor(uid, name, email, mobileNumber, role){
         this.uid = uid;
         this.name = name;
@@ -19,4 +19,4 @@ class Rider {
     }
 }
 
-module.exports = Rider;
+// module.exports = Rider;

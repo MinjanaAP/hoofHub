@@ -1,7 +1,7 @@
-const { auth, db } = require("../config/firebase");
-const Rider = require("../models/rider.model");
+import { auth, db } from "../config/firebase.js";
+import Rider from "../models/rider.model.js";
 
-exports.registerRider = async (req , res )=>{
+export const registerRider = async (req , res )=>{
     try {
         const {email, password, name, mobileNumber, role} = req.body;
 
@@ -30,7 +30,7 @@ exports.registerRider = async (req , res )=>{
     }
 }
 
-exports.getUserProfile = async (req, res)=>{
+export const getUserProfile = async (req, res)=>{
     try {
         const riderDoc = await db.collection("riders").doc(req.user.uid).get();
         if(!riderDoc){
