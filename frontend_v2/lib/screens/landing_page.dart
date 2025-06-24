@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/main.dart';
+
 import 'package:frontend/screens/home_screen.dart';
-import 'package:frontend/screens/riderScreens/rider_login.dart';
-import 'package:frontend/screens/riderScreens/rider_signup.dart';
 import 'package:frontend/screens/select_profile.dart';
 
 class LandingPage extends StatefulWidget {
@@ -24,7 +23,7 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   void _startProgress() {
-    Timer.periodic(const Duration(milliseconds: 100), (timer) {
+    Timer.periodic(const Duration(milliseconds: 10), (timer) {
       setState(() {
         _progress += 0.05;
 
@@ -40,7 +39,7 @@ class _LandingPageState extends State<LandingPage> {
     // Navigator.pushReplacementNamed(context, AppRoutes.riderLogin);
     Navigator.pushReplacement(
     context,
-    MaterialPageRoute(builder: (context) => AuthCheck()), 
+    MaterialPageRoute(builder: (context) => const AuthCheck()), 
   );
   }
 
@@ -106,20 +105,20 @@ class _LandingPageState extends State<LandingPage> {
 }
 
 //? Auth check-------------------
-class AuthCheck extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            // TODO : create loading page
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasData) {
-            return  const HomeScreen();
-          } else {
-            return  const SelectProfile();
-          }
-        });
-  }
-}
+// class AuthCheck extends StatelessWidget {
+//   @override
+//   Widget build(BuildContext context) {
+//     return StreamBuilder<User?>(
+//         stream: FirebaseAuth.instance.authStateChanges(),
+//         builder: (context, snapshot) {
+//           if (snapshot.connectionState == ConnectionState.waiting) {
+//             // TODO : create loading page
+//             return const Center(child: CircularProgressIndicator());
+//           } else if (snapshot.hasData) {
+//             return  const HomeScreen();
+//           } else {
+//             return  const SelectProfile();
+//           }
+//         });
+//   }
+// }

@@ -45,8 +45,9 @@ class _GuideLoginState extends State<GuideLogin> {
       logger.i("Login successful: ${userCredential.user!.email}");
       //? Navigate to home screen
       // Navigator.pushReplacementNamed(context, HomeScreen());
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()));
+      // Navigator.of(context).pushReplacement(
+      //     MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.pushReplacementNamed(context, AppRoutes.guideHome);
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {

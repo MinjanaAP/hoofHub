@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/guideScreens/guide_login.dart';
+import 'package:frontend/screens/guideScreens/guide_page.dart';
 import 'package:frontend/screens/guideScreens/guide_signup.dart';
+
 import 'package:frontend/screens/landing_page.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_profile.dart';
@@ -19,11 +22,13 @@ class AppRoutes {
   //? Guide Routes
   static const String guideSignup = '/guideSignup';
   static const String guideLogin = '/guideLogin';
+  static const String guidePage = '/guidePage';
 
   //? Other Routes
   static const String selectProfile = '/selectProfile';
   static const String startingPage = '/startingPage';
   static const String loadingPage = '/loadingPage';
+  static const String guideHome = '/guideHome';
 
   static Map<String, WidgetBuilder> routes = {
     //? Initial main home rote
@@ -37,6 +42,8 @@ class AppRoutes {
     //? Guide Routes
     guideSignup: (context) => const GuideSignup(),
     guideLogin: (context) => const GuideLogin(),
+    guidePage: (context) => const GuidePage(),
+    guideHome:  (context) => const GuideHome(),
 
     //?Other Routes
     startingPage: (context) => const StartingPage(),

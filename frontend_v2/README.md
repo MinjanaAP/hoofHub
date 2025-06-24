@@ -14,3 +14,9 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+
+# 06/21
+guide signup is ok, with profile images and horse images.
+# todo : create guide home pages
+# todo : create rides in admin

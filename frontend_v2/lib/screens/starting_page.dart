@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/landing_page.dart';
+import 'package:frontend/main.dart';
 
 class StartingPage extends StatefulWidget {
   const StartingPage({super.key});
@@ -13,10 +14,14 @@ class _StartingPageState extends State<StartingPage> {
   void initState() {
     super.initState();
 
-    Future.delayed(const Duration(seconds: 3),(){
+    Future.delayed(const Duration(seconds: 3), () {
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder:(context) => const LandingPage()));
       Navigator.pushReplacement(
-        context, 
-        MaterialPageRoute(builder:(context) => const LandingPage()));
+        context,
+        MaterialPageRoute(builder: (context) => const AuthCheck()),
+      );
     });
   }
 

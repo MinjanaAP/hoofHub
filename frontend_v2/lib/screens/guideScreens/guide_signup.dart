@@ -158,8 +158,6 @@ class _GuideSignupState extends State<GuideSignup> {
       logger.i("Horse Data: ${formData.horseName}, ${formData.horseBreed}");
       logger.i("Profile Data: ${formData.bio}, ${formData.experience}");
 
-      // TODO: Implement form submission
-      // Navigator.push(context, MaterialPageRoute(builder: (_) => SuccessScreen()));
       try {
         var request = http.MultipartRequest(
           'POST',
@@ -199,7 +197,7 @@ class _GuideSignupState extends State<GuideSignup> {
         for (int i = 0; i < formData.horseImagePaths.length; i++) {
           File imageFile = File(formData.horseImagePaths[i]);
           request.files.add(await http.MultipartFile.fromPath(
-            'horseImages', 
+            'horseImages',
             imageFile.path,
             filename: 'horse_$i.jpg',
           ));
@@ -233,10 +231,28 @@ class _GuideSignupState extends State<GuideSignup> {
             },
           );
         } else {
-          logger.e("Failed to register. Code: ${response.statusCode}");
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to register. Please try again.')),
-          );
+          final resBody = await response.stream.bytesToString();
+          final resJson = jsonDecode(resBody);
+
+          final errorMessage = resJson['message'] ?? 'Failed to register.';
+
+          logger.e(
+              "Failed to register. Code: ${response.statusCode}, Error: $errorMessage");
+
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text("Registration Error"),
+                content: Text(errorMessage),
+                actions: [
+                  TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("OK"))
+                ],
+              ),
+            );
+          }
         }
       } catch (e) {
         logger.e("Submission error: $e");
