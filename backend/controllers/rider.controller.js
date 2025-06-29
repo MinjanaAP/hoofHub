@@ -23,7 +23,7 @@ export const registerRider = async (req , res )=>{
             role:'rider'
         }
         const roleId = await userService.saveUserRole(roleData);
-        const newRider = new Rider(userRecord.uid, name, email,mobileNumber, roleId);
+        const newRider = new Rider(userRecord.uid, name, email,mobileNumber, roleId, "rider");
         await db.collection("riders").doc(userRecord.uid).set(newRider.toFireStore());
         res.status(201).json({
             status: true,

@@ -68,6 +68,7 @@ export const registerGuide = async (req, res) => {
             bio,
             experience,
             languages: languages,
+            role : 'guide'
         };
 
         await createGuideWithHorse(userRecord.uid, guideData, horseData);

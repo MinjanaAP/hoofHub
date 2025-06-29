@@ -5,6 +5,7 @@ import 'package:frontend/screens/guideScreens/guide_page.dart';
 import 'package:frontend/screens/guideScreens/guide_signup.dart';
 
 import 'package:frontend/screens/landing_page.dart';
+import 'package:frontend/screens/ride_page.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_profile.dart';
 import 'package:frontend/screens/riderScreens/rider_signup.dart';
@@ -13,7 +14,6 @@ import 'package:frontend/screens/starting_page.dart';
 
 class AppRoutes {
   // static const String home = '/';
-
   //? Rider Routes
   static const String riderLogin = '/riderLogin';
   static const String riderSignUp = '/riderSignUp';
@@ -29,6 +29,7 @@ class AppRoutes {
   static const String startingPage = '/startingPage';
   static const String loadingPage = '/loadingPage';
   static const String guideHome = '/guideHome';
+  static const String ridePage = '/ridePage';
 
   static Map<String, WidgetBuilder> routes = {
     //? Initial main home rote
@@ -43,11 +44,14 @@ class AppRoutes {
     guideSignup: (context) => const GuideSignup(),
     guideLogin: (context) => const GuideLogin(),
     guidePage: (context) => const GuidePage(),
-    guideHome:  (context) => const GuideHome(),
+    guideHome: (context) => const GuideHome(),
 
     //?Other Routes
     startingPage: (context) => const StartingPage(),
     loadingPage: (context) => const LandingPage(),
     selectProfile: (context) => const SelectProfile(),
+    ridePage: (context) => const RidePage()
   };
+
+  
 }
