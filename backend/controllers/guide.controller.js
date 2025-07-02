@@ -53,6 +53,7 @@ export const registerGuide = async (req, res) => {
             color: horseColor,
             specialNotes: horseSpecialNotes,
             images: horseImageUrls,
+            ownerId: userRecord.uid,
         };
 
         const guideData = {
