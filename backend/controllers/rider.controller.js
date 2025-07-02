@@ -1,5 +1,6 @@
 import { auth, db } from "../config/firebase.js";
 import Rider from "../models/rider.model.js";
+import riderService from "../services/rider.service.js";
 import userService from "../services/user.service.js";
 
 
@@ -48,4 +49,15 @@ export const getUserProfile = async (req, res)=>{
     } catch (error) {
         res.status(500).json({ status:false, error: error.message });
     }
+}
+
+
+export const getAllRiders = async  (req, res) => {
+  try {
+    const riders = await riderService.getAllRiders();
+    res.status(200).json(riders); 
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch riders" }); 
+  }
 }
