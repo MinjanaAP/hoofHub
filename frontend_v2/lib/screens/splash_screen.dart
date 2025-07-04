@@ -64,7 +64,9 @@ class _SplashScreenState extends State<SplashScreen>
             FadeTransition(
               opacity: _fadeAnimation,
               child: Image.asset(
-                'assets/images/logoColor.png',
+                'assets/images/loading-logo.png',
+                width: 250,
+                height: 250,
               ),
             ),
             const Row(
@@ -98,7 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
             ScaleTransition(
               scale: _textScaleAnimation,
               child: Text(
-                "Saddle Up & Ride!", 
+                "Saddle Up & Ride!",
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,

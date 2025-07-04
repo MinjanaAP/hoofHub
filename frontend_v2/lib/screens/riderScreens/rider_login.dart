@@ -6,6 +6,7 @@ import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
 
 class RiderLoginScreen extends StatefulWidget {
@@ -46,8 +47,8 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
       logger.i("Login successful: ${userCredential.user!.email}");
       //? Navigate to home screen
       // Navigator.pushReplacementNamed(context, HomeScreen());
-      Navigator.of(context)
-          .pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()));
     } on FirebaseAuthException catch (e) {
       String errorMessage;
       switch (e.code) {
@@ -88,6 +89,29 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
     }
   }
 
+Future<void> signInWithGoogle() async {
+  try {
+
+    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+    if (googleUser == null) return;
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+    final credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+    User? user = userCredential.user;
+    print('Google Sign-In successful: ${user?.email}');
+  } catch (e) {
+    print('Google Sign-In failed: $e');
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,7 +127,9 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
               children: [
                 const Padding(
                   padding: EdgeInsets.fromLTRB(0, 20, 0, 0),
-                  child: HoofHubText(text: "Ride",),
+                  child: HoofHubText(
+                    text: "Ride",
+                  ),
                 ),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -248,17 +274,17 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                                     }
                                   },
                                   child: _isLoading
-                                  ? const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text("Login..."),
-                                        SizedBox(width: 10),
-                                        CircularProgressIndicator(
-                                          color: Colors.white, 
-                                        ),
-                                      ],
-                                    )
-                                  : const Text("Login"),
+                                      ? const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text("Login..."),
+                                            SizedBox(width: 10),
+                                            CircularProgressIndicator(
+                                              color: Colors.white,
+                                            ),
+                                          ],
+                                        )
+                                      : const Text("Login"),
                                 ),
                               ),
                             ],
@@ -344,7 +370,7 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
                 const Divider(
                   color: Color.fromARGB(23, 114, 53, 148),
                   thickness: 1,
-                  indent: 20, 
+                  indent: 20,
                   endIndent: 20,
                 ),
                 const SizedBox(

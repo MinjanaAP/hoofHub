@@ -4,6 +4,7 @@ import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/signup_text_feild.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/services/api_service.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/web.dart';
 
@@ -42,7 +43,7 @@ class _GuideLoginState extends State<GuideLogin> {
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
-      logger.i("Login successful: ${userCredential.user!.email}");
+      logger.i("Login successful: ${userCredential.user}");
       //? Navigate to home screen
       // Navigator.pushReplacementNamed(context, HomeScreen());
       // Navigator.of(context).pushReplacement(

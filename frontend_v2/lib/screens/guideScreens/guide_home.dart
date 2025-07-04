@@ -1,55 +1,85 @@
+import 'dart:convert';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
 import 'package:frontend/common/home_appbar.dart';
+import 'package:frontend/constant/api_constants.dart';
+import 'package:frontend/models/ride_model.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/services/api_service.dart';
 import 'package:frontend/theme.dart';
-import 'package:logger/web.dart';
+import 'package:http/http.dart' as http;
 
 class GuideHome extends StatefulWidget {
-
-
-  const GuideHome({
-    super.key,
-  });
+  const GuideHome({super.key});
+  
   static final User? user = FirebaseAuth.instance.currentUser;
+
   @override
   State<GuideHome> createState() => _GuideHomeState();
 }
 
 class _GuideHomeState extends State<GuideHome> {
   String guideName = 'Guide...';
-  String guideImage = 'https://img.freepik.com/free-vector/flat-design-cowboy-silhouette-illustration_23-2149489749.jpg?semt=ais_hybrid&w=740';
+  String guideImage = 'https://img.freepik.com/free-vector/flat-design-cowboy-silhouette-illustration_23-2149489749.jpg';
   List<Horse> horses = [];
   bool isLoading = true;
-
-  static final logger = Logger();
-  static final User? user = FirebaseAuth.instance.currentUser;
+  List<Ride> rides = [];
+  final Color primaryColor = const Color(0xFF723594);
 
   @override
   void initState() {
     super.initState();
     fetchGuideData();
+    fetchRides();
   }
 
   Future<void> fetchGuideData() async {
+    final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    logger.i("uid : ${user?.uid}");
+    
     try {
       final response = await ApiService.getGuideById(user!.uid);
-      logger.i("response : $response");
       setState(() {
         guideName = response['fullName'] ?? 'Guide';
         guideImage = response['profileImage'] ?? '';
-        horses = [
-          Horse.fromJson(response['horse'])
-        ];
+        horses = [Horse.fromJson(response['horse'])];
         isLoading = false;
       });
     } catch (e) {
-      logger.e("Guide Fetch Error: $e");
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Guide Not Found"),
+          content: const Text("Please login with correct guide credentials."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.guideLogin),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> fetchRides() async {
+    try {
+      final response = await http.get(Uri.parse("${ApiConstants.baseUrl}/rides"));
+      if (response.statusCode == 200) {
+        setState(() {
+          rides = (json.decode(response.body) as List)
+              .map((json) => Ride.fromJson(json))
+              .toList();
+          isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load rides");
+      }
+    } catch (e) {
       setState(() => isLoading = false);
     }
   }
@@ -59,8 +89,18 @@ class _GuideHomeState extends State<GuideHome> {
       await FirebaseAuth.instance.signOut();
       Navigator.pushReplacementNamed(context, AppRoutes.selectProfile);
     } catch (e) {
-      logger.e("Logout Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Logout failed: ${e.toString()}")),
+      );
     }
+  }
+
+  void navigateToRideDetail(BuildContext context, Ride ride) {
+    Navigator.pushNamed(context, AppRoutes.ridePage, arguments: ride);
+  }
+
+  void navigateToHorseDetail(BuildContext context, Horse horse) {
+    Navigator.pushNamed(context, AppRoutes.horseDetails , arguments: horse);
   }
 
   @override
@@ -68,204 +108,262 @@ class _GuideHomeState extends State<GuideHome> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F9F9),
       appBar: const HomeAppBar(),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-              ),
+      drawer: _buildDrawer(context),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF723594)))
+          : SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(guideImage),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    guideName,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
-                  Text(
-                    "${GuideHome.user?.email}",
-                    style: const TextStyle(color: Colors.white70),
-                  ),
+                  _buildHeaderSection(),
+                  const SizedBox(height: 16),
+                  _buildStatsSection(),
+                  const SizedBox(height: 24),
+                  _buildHorsesSection(context),
+                  const SizedBox(height: 24),
+                  _buildBookingsSection(),
+                  const SizedBox(height: 24),
+                  _buildRideAreasSection(context),
+                  const SizedBox(height: 40),
                 ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pushNamed(context, AppRoutes.guideHome);
-              },
+      bottomNavigationBar: const BottomNavBar(),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(color: primaryColor),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: NetworkImage(guideImage),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  guideName,
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "${GuideHome.user?.email}",
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.person_3),
-              title: const Text('My Profile'),
-              onTap: () {
-                Navigator.pushNamed(context, AppRoutes.guidePage);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
-              onTap: () {
-                logout(context);
-              },
-            ),
-          ],
+          ),
+          ListTile(
+            leading: Icon(Icons.home, color: primaryColor),
+            title: const Text('Home'),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.guideHome),
+          ),
+          ListTile(
+            leading: Icon(Icons.person, color: primaryColor),
+            title: const Text('My Profile'),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.guidePage),
+          ),
+          ListTile(
+            leading: Icon(Icons.settings, color: primaryColor),
+            title: const Text('Settings'),
+            onTap: () => Navigator.pop(context),
+          ),
+          const Divider(),
+          ListTile(
+            leading: Icon(Icons.logout, color: Colors.red[400]),
+            title: const Text('Logout'),
+            onTap: () => logout(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryColor, Color(0xFF8f4ab8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 48, 16, 32),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF723594), Color(0xFF8f4ab8)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.white.withOpacity(0.2),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundImage: NetworkImage(guideImage),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Welcome back!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  guideName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Your guide dashboard',
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsSection() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          Expanded(child: _StatCard(
+            icon: Icons.calendar_today,
+            label: "Today's Rides",
+            value: '3',
+          )),
+          SizedBox(width: 16),
+          Expanded(child: _StatCard(
+            icon: Icons.star,
+            label: "Rating",
+            value: '4.8',
+          )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHorsesSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'My Horses',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              TextButton(
+                onPressed: () {}, // TODO: Add horse functionality
+                style: TextButton.styleFrom(
+                  foregroundColor: primaryColor,
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, size: 18),
+                    SizedBox(width: 4),
+                    Text('Add Horse'),
+                  ],
                 ),
               ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(guideImage),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Welcome back!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        guideName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const Text(
-                        'Your dashboard overview',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    ],
-                  )
-                ],
-              ),
-            ),
-
-            // Stats
-            const Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  _StatCard(
-                    icon: Icons.calendar_today,
-                    label: "Today's Rides",
-                    value: '3',
-                  ),
-                  const SizedBox(width: 16),
-                  _StatCard(
-                    icon: Icons.star,
-                    label: "Rating",
-                    value: '4.8',
-                  ),
-                ],
-              ),
-            ),
-
-            // My Horses
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'My Horses',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.plus_one, color: Color(0xFF723594)),
-                    label: const Text(
-                      'Add Horse',
-                      style: TextStyle(color: Color(0xFF723594)),
-                    ),
-                  )
-                ],
-              ),
-            ),
-            ...horses.map((horse) => _HorseCard(horse: horse)).toList(),
-
-            // Upcoming Bookings (hardcoded)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Text(
-                'Upcoming Bookings',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ...[1, 2].map((e) => _BookingCard()),
-
-            // Ride Areas (hardcoded)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 24, 16, 8),
-              child: Text(
-                'Available Ride Areas',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: [
-                  'Coastal Trail',
-                  'Mountain Path',
-                  'Forest Track',
-                  'Beach Route'
-                ].map((area) => _RideAreaCard(areaName: area)).toList(),
-              ),
-            ),
-            const SizedBox(height: 40),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...horses.map((horse) => GestureDetector(
+            onTap: () => navigateToHorseDetail(context, horse),
+            child: _HorseCard(horse: horse),
+          )).toList(),
+        ],
       ),
-      bottomNavigationBar: const BottomNavBar(),
+    );
+  }
+
+  Widget _buildBookingsSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Upcoming Bookings',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          ...[1, 2].map((e) => const _BookingCard()).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRideAreasSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Available Ride Areas',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          rides.isEmpty
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Text(
+                      "No rides available",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                )
+              : GridView.count(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: .77,
+                  children: rides.map((ride) => GestureDetector(
+                    onTap: () => navigateToRideDetail(context, ride),
+                    child: _RideAreaCard(ride: ride),
+                  )).toList(),
+                ),
+        ],
+      ),
     );
   }
 }
 
 class Horse {
+  final String id;
   final String name;
   final String breed;
   final String experience;
-  final String image; 
+  final String image;
 
   Horse({
+    required this.id,
     required this.name,
     required this.breed,
     required this.experience,
@@ -275,6 +373,7 @@ class Horse {
   factory Horse.fromJson(Map<String, dynamic> json) {
     final List<dynamic>? images = json['images'];
     return Horse(
+      id: json['_id'] ?? '',
       name: json['name'] ?? 'Unnamed',
       breed: json['breed'] ?? 'Unknown',
       experience: json['specialNotes'] ?? 'N/A',
@@ -283,37 +382,47 @@ class Horse {
   }
 }
 
-
 class _StatCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
 
-  const _StatCard(
-      {required this.icon, required this.label, required this.value});
+  const _StatCard({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: Color(0xFF723594), size: 20),
-                  const SizedBox(width: 8),
-                  Text(label, style: const TextStyle(color: Colors.grey)),
-                ],
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: const Color(0xFF723594), size: 24),
+            const SizedBox(height: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 14,
               ),
-              const SizedBox(height: 8),
-              Text(value,
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold))
-            ],
-          ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              value,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -326,20 +435,71 @@ class _HorseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Card(
-        child: ListTile(
-          leading: horse.image.isNotEmpty
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(horse.image,
-                      width: 56, height: 56, fit: BoxFit.cover),
-                )
-              : const Icon(Icons.image),
-          title: Text(horse.name),
-          subtitle: Text('${horse.breed}\n${horse.experience} Level'),
-          trailing: const Icon(Icons.chevron_right),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: horse.image.isNotEmpty
+                  ? Image.network(
+                      horse.image,
+                      width: 64,
+                      height: 64,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 64,
+                        height: 64,
+                        color: Colors.grey[200],
+                        child: const Icon(Icons.image),
+                      ),
+                    )
+                  : Container(
+                      width: 64,
+                      height: 64,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image),
+                    ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    horse.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    horse.breed,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    horse.experience,
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: Colors.grey),
+          ],
         ),
       ),
     );
@@ -351,65 +511,71 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(
-                        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=50&h=50'),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text('John Doe',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      Text('Beginner Rider',
-                          style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                  const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF723594).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(20),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                const CircleAvatar(
+                  radius: 20,
+                  backgroundImage: NetworkImage(
+                      'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde'),
+                ),
+                const SizedBox(width: 12),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'John Doe',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    child: const Text(
-                      'Today',
-                      style: TextStyle(color: Color(0xFF723594)),
+                    Text(
+                      'Beginner Rider',
+                      style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
-                  )
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Icon(Icons.calendar_month, size: 16, color: Colors.grey),
-                  SizedBox(width: 6),
-                  Text('2:30 PM - 4:30 PM',
-                      style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Row(
-                children: [
-                  Icon(Icons.location_city, size: 16, color: Colors.grey),
-                  SizedBox(width: 6),
-                  Text('Coastal Trail', style: TextStyle(color: Colors.grey)),
-                ],
-              )
-            ],
-          ),
+                  ],
+                ),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF723594).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Text(
+                    'Today',
+                    style: TextStyle(color: Color(0xFF723594)),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(Icons.calendar_month, size: 16, color: Colors.grey),
+                SizedBox(width: 8),
+                Text(
+                  '2:30 PM - 4:30 PM',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            const Row(
+              children: [
+                Icon(Icons.location_on, size: 16, color: Colors.grey),
+                SizedBox(width: 8),
+                Text('Coastal Trail', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -417,38 +583,78 @@ class _BookingCard extends StatelessWidget {
 }
 
 class _RideAreaCard extends StatelessWidget {
-  final String areaName;
-  const _RideAreaCard({required this.areaName});
+  final Ride ride;
+  const _RideAreaCard({required this.ride});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: MediaQuery.of(context).size.width / 2 - 24,
-      child: Card(
-        child: Column(
-          children: [
-            ClipRRect(
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(12)),
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            child: AspectRatio(
+              aspectRatio: 1.5,
               child: Image.network(
-                'https://images.unsplash.com/photo-1586947250822-31a4f10f0d72?auto=format&fit=crop&q=80&w=200',
-                height: 80,
-                width: double.infinity,
+                ride.imageUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: Icon(Icons.image_not_supported)),
+                ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Text(areaName,
-                      style: const TextStyle(fontWeight: FontWeight.bold)),
-                  const Text('2.5 km', style: TextStyle(color: Colors.grey)),
-                ],
-              ),
-            )
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  ride.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(Icons.location_on, size: 14, color: Colors.grey[500]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        ride.location,
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'LKR ${ride.price}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF723594),
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

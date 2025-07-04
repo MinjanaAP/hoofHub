@@ -6,6 +6,8 @@ import 'package:frontend/common/home_appbar.dart';
 import 'package:frontend/common/home_carousel.dart';
 import 'package:frontend/common/home_search_bar.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
+import 'package:frontend/services/ride_service.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/logger.dart';
 import '../services/api_service.dart';
@@ -23,11 +25,13 @@ class _HomeScreenState extends State<HomeScreen> {
   String message = "Fetching data...";
   final User? user = FirebaseAuth.instance.currentUser;
   final ScrollController _scrollController = ScrollController();
+  late Future<List> popularRides;
 
   @override
   void initState() {
     super.initState();
     fetchData();
+    popularRides = RideService().getPopularRides();
   }
 
   Future<void> fetchData() async {
@@ -88,7 +92,24 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 24),
                   _buildSectionHeader("Most Popular Rides", Icons.star),
                   const SizedBox(height: 12),
-                  _buildPopularRidesList(),
+                  // _buildPopularRidesList(),
+                  FutureBuilder<List>(
+                    future: popularRides,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        // return const Center(child: CircularProgressIndicator());
+                        return const RideCardSkeleton();
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text("Error: ${snapshot.error}"));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                            child: Text("No popular rides found."));
+                      }
+
+                      return buildPopularRidesList(snapshot.data!);
+                    },
+                  ),
+                  // buildPopularRidesList(popularRides),
                   const SizedBox(height: 24),
                   _buildSectionHeader("Your Previous Rides", Icons.history),
                   const SizedBox(height: 12),
@@ -192,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(50),
       onTap: () {
-        // Navigate to booking screen
+        Navigator.pushNamed(context, AppRoutes.bookingType);
       },
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -230,7 +251,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
@@ -271,37 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPopularRidesList() {
-    final popularRides = [
-      {
-        "name": "Gegari Park",
-        "location": "Nuwara Eliya",
-        "image": "assets/images/horse-4.jpg",
-        "distance": "740 m",
-        "price": "\$4.99",
-        "duration": "30-45 mins",
-        "rating": 4.8,
-      },
-      {
-        "name": "Sunset Beach Ride",
-        "location": "Arugam Bay",
-        "image": "assets/images/horse-2.jpg",
-        "distance": "1.2 km",
-        "price": "\$7.99",
-        "duration": "45-60 mins",
-        "rating": 4.9,
-      },
-      {
-        "name": "Mountain Trail",
-        "location": "Haputale",
-        "image": "assets/images/horse-3.jpg",
-        "distance": "2.5 km",
-        "price": "\$9.99",
-        "duration": "60-90 mins",
-        "rating": 4.7,
-      },
-    ];
-
+  Widget buildPopularRidesList(List<dynamic> popularRides) {
     return SizedBox(
       height: 220,
       child: ListView.builder(
@@ -311,7 +303,8 @@ class _HomeScreenState extends State<HomeScreen> {
           final ride = popularRides[index];
           return Container(
             width: 180,
-            margin: EdgeInsets.only(right: index == popularRides.length - 1 ? 0 : 16),
+            margin: EdgeInsets.only(
+                right: index == popularRides.length - 1 ? 0 : 16),
             child: Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -320,20 +313,22 @@ class _HomeScreenState extends State<HomeScreen> {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.ridePage);
+                  Navigator.pushNamed(context, AppRoutes.ridePage,
+                      arguments: ride['id']);
                 },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
-                      ),
-                      child: Image.asset(
-                        '${ride["image"]}',
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: Image.network(
+                        ride['images'][0],
                         width: double.infinity,
                         height: 100,
                         fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image),
                       ),
                     ),
                     Padding(
@@ -342,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${ride["name"]}',
+                            ride['title'],
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
@@ -352,11 +347,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${ride["location"]}',
+                            ride['location'],
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 12,
-                            ),
+                                color: Colors.grey[600], fontSize: 12),
                           ),
                           const SizedBox(height: 8),
                           Row(
@@ -367,16 +360,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                   const Icon(Icons.star,
                                       color: Colors.amber, size: 16),
                                   Text(
-                                    ride["rating"].toString(),
+                                    ride['rating'].toString(),
                                     style: const TextStyle(fontSize: 12),
                                   ),
                                 ],
                               ),
                               Text(
-                                '${ride["price"]}',
+                                "Rs. ${ride['price']}",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   color: Colors.green,
+                                  fontSize: 12,
                                 ),
                               ),
                             ],
