@@ -1,10 +1,9 @@
 import { db } from "../config/firebase.js";
 
-
 // CREATE
 export const createRideService = async (id, rideData, imageUrls) => {
     try {
-        const rideRef = db.collection('rides').doc(id);
+        const rideRef = db.collection("rides").doc(id);
 
         const data = {
             ...rideData,
@@ -19,7 +18,7 @@ export const createRideService = async (id, rideData, imageUrls) => {
         await rideRef.set(data);
         return { id, ...data };
     } catch (error) {
-        throw new Error('Error creating ride: ' + error.message);
+        throw new Error("Error creating ride: " + error.message);
     }
 };
 
@@ -73,10 +72,30 @@ export const deleteRideService = async (id) => {
     }
 };
 
+export const getTopRatedRides = async (limit = 3) => {
+    try {
+        const snapshot = await db
+            .collection("rides")
+            .orderBy("rating", "desc")
+            .limit(limit)
+            .get();
+
+        const rides = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        return rides;
+    } catch (error) {
+        throw new Error("Failed to fetch top-rated rides: " + error.message);
+    }
+};
+
 export default {
     createRideService,
     getAllRidesService,
     getRideByIdService,
     updateRideService,
-    deleteRideService
-}
+    deleteRideService,
+    getTopRatedRides,
+};

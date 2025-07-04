@@ -78,3 +78,12 @@ export async function deleteRide(req, res) {
         res.status(500).json({ error: "Failed to delete ride" });
     }
 }
+
+export const getTopRides = async (req, res) => {
+  try {
+    const rides = await ridesService.getTopRatedRides(3); 
+    res.status(200).json({ status: true, data: rides });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message });
+  }
+};
