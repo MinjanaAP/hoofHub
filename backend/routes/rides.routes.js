@@ -5,6 +5,7 @@ import {
     getRideById,
     updateRide,
     deleteRide,
+    getTopRides
 } from "../controllers/rides.controller.js";
 import upload from "../utils/mutler.js";
 
@@ -26,5 +27,6 @@ router.put(
 );
 
 router.delete("/:id", deleteRide);
+router.get("/rating/top", getTopRides);
 
 export default router;
