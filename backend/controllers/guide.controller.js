@@ -23,6 +23,7 @@ export const registerGuide = async (req, res) => {
             bio,
             experience,
             languages,
+            rideId
         } = req.body;
 
         const userRecord = await auth.createUser({ email, password, displayName: fullName });
@@ -69,7 +70,8 @@ export const registerGuide = async (req, res) => {
             bio,
             experience,
             languages: languages,
-            role : 'guide'
+            role : 'guide',
+            rideId
         };
 
         await createGuideWithHorse(userRecord.uid, guideData, horseData);
@@ -116,9 +118,25 @@ const deleteGuide = async (req, res) => {
     }
 };
 
+const getGuidesByRideId = async (req, res) => {
+    try {
+        const rideId = req.params.rideId;
+        if (!rideId) {
+            return res.status(400).json({ message: "Ride ID is required" });
+        }
+
+        const guides = await guideService.getGuidesByRideId(rideId);
+        return res.status(200).json(guides);
+    } catch (error) {
+        console.error("Error getting guides by ride ID:", error);
+        return res.status(500).json({ message: error.message });
+    }
+};
+
 export default {
     getAllGuides,
     getGuideById,
     updateGuide,
-    deleteGuide
+    deleteGuide,
+    getGuidesByRideId
 }

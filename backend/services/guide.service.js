@@ -1,7 +1,9 @@
 import { db } from "../config/firebase.js";
+import horseService from "./horse.service.js";
 import saveHorseToFirestore from "./horse.service.js";
 import userService from "./user.service.js";
 import saveUserRole from "./user.service.js";
+import admin from 'firebase-admin';
 
 export const saveGuideToFirestore = async (uid, guideData) => {
     try {
@@ -17,7 +19,7 @@ export const saveGuideToFirestore = async (uid, guideData) => {
 };
 
 export const createGuideWithHorse = async (uid, guideData, horseData) => {
-    const horseId = await saveHorseToFirestore(horseData);
+    const horseId = await horseService.createHorse(horseData);
     guideData.horseId = horseId;
     const userData = {
         uid: uid,
@@ -31,6 +33,14 @@ export const createGuideWithHorse = async (uid, guideData, horseData) => {
             ...guideData,
             createdAt: new Date().toISOString(),
         });
+
+        const rideId = guideData.rideId; // make sure this exists
+        const rideRef = db.collection("rides").doc(rideId);
+        await rideRef.update({
+            guideIds: admin.firestore.FieldValue.arrayUnion(uid)
+        });
+
+
         return { success: true };
     } catch (error) {
         throw new Error("Error saving guide: " + error.message);
@@ -79,9 +89,43 @@ const deleteGuide = async (id) => {
     await db.collection("guides").doc(id).delete();
 };
 
+const getGuidesByRideId = async (rideId) => {
+    const rideDoc = await db.collection('rides').doc(rideId).get();
+
+    if (!rideDoc.exists) {
+        throw new Error("Ride not found");
+    }
+
+    const rideData = rideDoc.data();
+    const guideIds = rideData.guideIds || [];
+
+    const guidePromises = guideIds.map(async (uid) => {
+        const guideDoc = await db.collection('guides').doc(uid).get();
+        if (!guideDoc.exists) return null;
+
+        const guideData = guideDoc.data();
+
+        // Fetch the horse details
+        const horseDoc = await db.collection('horses').doc(guideData.horseId).get();
+
+        return {
+            id: guideDoc.id,
+            ...guideData,
+            horse: horseDoc.exists ? horseDoc.data() : null
+        };
+    });
+
+    const guides = await Promise.all(guidePromises);
+
+    // Filter out any nulls (nonexistent guides)
+    return guides.filter(g => g !== null);
+};
+
+
 export default  {
     deleteGuide,
     getAllGuides,
     getGuideById,
-    updateGuide
+    updateGuide,
+    getGuidesByRideId
 }

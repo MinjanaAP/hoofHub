@@ -16,6 +16,6 @@ router.get('/', guideController.getAllGuides);
 router.get('/:id', guideController.getGuideById);
 router.put('/:id', guideController.updateGuide);
 router.delete('/:id', guideController.deleteGuide);
-
+router.get('/by-ride/:rideId', guideController.getGuidesByRideId);
 
 export default router;
