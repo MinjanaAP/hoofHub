@@ -81,7 +81,7 @@ class _AuthCheckState extends State<AuthCheck> {
       final user = auth.currentUser;
 
       if (user == null) {
-        _navigateTo(const RiderLoginScreen());
+        _navigateTo(const SelectProfile());
         return;
       }
 
