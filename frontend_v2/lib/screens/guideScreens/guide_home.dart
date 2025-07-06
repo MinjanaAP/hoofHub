@@ -3,17 +3,17 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
+import 'package:frontend/common/guide_components/upcoming_bookings.dart';
 import 'package:frontend/common/home_appbar.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/ride_model.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/services/api_service.dart';
-import 'package:frontend/theme.dart';
 import 'package:http/http.dart' as http;
 
 class GuideHome extends StatefulWidget {
   const GuideHome({super.key});
-  
+
   static final User? user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -22,10 +22,12 @@ class GuideHome extends StatefulWidget {
 
 class _GuideHomeState extends State<GuideHome> {
   String guideName = 'Guide...';
-  String guideImage = 'https://img.freepik.com/free-vector/flat-design-cowboy-silhouette-illustration_23-2149489749.jpg';
+  String guideImage =
+      'https://img.freepik.com/free-vector/flat-design-cowboy-silhouette-illustration_23-2149489749.jpg';
   List<Horse> horses = [];
   bool isLoading = true;
   List<Ride> rides = [];
+  final User? guide = FirebaseAuth.instance.currentUser;
   final Color primaryColor = const Color(0xFF723594);
 
   @override
@@ -38,7 +40,7 @@ class _GuideHomeState extends State<GuideHome> {
   Future<void> fetchGuideData() async {
     final User? user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    
+
     try {
       final response = await ApiService.getGuideById(user!.uid);
       setState(() {
@@ -56,7 +58,8 @@ class _GuideHomeState extends State<GuideHome> {
           content: const Text("Please login with correct guide credentials."),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pushReplacementNamed(context, AppRoutes.guideLogin),
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, AppRoutes.guideLogin),
               child: const Text("OK"),
             ),
           ],
@@ -68,7 +71,8 @@ class _GuideHomeState extends State<GuideHome> {
 
   Future<void> fetchRides() async {
     try {
-      final response = await http.get(Uri.parse("${ApiConstants.baseUrl}/rides"));
+      final response =
+          await http.get(Uri.parse("${ApiConstants.baseUrl}/rides"));
       if (response.statusCode == 200) {
         setState(() {
           rides = (json.decode(response.body) as List)
@@ -96,11 +100,11 @@ class _GuideHomeState extends State<GuideHome> {
   }
 
   void navigateToRideDetail(BuildContext context, Ride ride) {
-    Navigator.pushNamed(context, AppRoutes.ridePage, arguments: ride);
+    Navigator.pushNamed(context, AppRoutes.ridePage, arguments: ride.id);
   }
 
   void navigateToHorseDetail(BuildContext context, Horse horse) {
-    Navigator.pushNamed(context, AppRoutes.horseDetails , arguments: horse);
+    Navigator.pushNamed(context, AppRoutes.horseDetails, arguments: horse);
   }
 
   @override
@@ -110,23 +114,48 @@ class _GuideHomeState extends State<GuideHome> {
       appBar: const HomeAppBar(),
       drawer: _buildDrawer(context),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator(color: Color(0xFF723594)))
-          : SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeaderSection(),
-                  const SizedBox(height: 16),
-                  _buildStatsSection(),
-                  const SizedBox(height: 24),
-                  _buildHorsesSection(context),
-                  const SizedBox(height: 24),
-                  _buildBookingsSection(),
-                  const SizedBox(height: 24),
-                  _buildRideAreasSection(context),
-                  const SizedBox(height: 40),
-                ],
-              ),
+          ? const Center(
+              child: CircularProgressIndicator(color: Color(0xFF723594)))
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeaderSection(),
+                        const SizedBox(height: 16),
+                        _buildStatsSection(),
+                        const SizedBox(height: 24),
+                        _buildHorsesSection(context),
+                        const SizedBox(height: 24),
+                        // For UpcomingBookingsWidget - give it a fixed height
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            'Upcoming Bookings',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        SizedBox(
+                          height: 600, // Adjust based on your needs
+                          child: UpcomingBookingsWidget(
+                            guideId: guide!.uid,
+                            primaryColor: primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildRideAreasSection(context),
+                        const SizedBox(height: 40),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
       bottomNavigationBar: const BottomNavBar(),
     );
@@ -244,13 +273,15 @@ class _GuideHomeState extends State<GuideHome> {
       padding: EdgeInsets.symmetric(horizontal: 24),
       child: Row(
         children: [
-          Expanded(child: _StatCard(
+          Expanded(
+              child: _StatCard(
             icon: Icons.calendar_today,
             label: "Today's Rides",
             value: '3',
           )),
           SizedBox(width: 16),
-          Expanded(child: _StatCard(
+          Expanded(
+              child: _StatCard(
             icon: Icons.star,
             label: "Rating",
             value: '4.8',
@@ -290,10 +321,12 @@ class _GuideHomeState extends State<GuideHome> {
             ],
           ),
           const SizedBox(height: 12),
-          ...horses.map((horse) => GestureDetector(
-            onTap: () => navigateToHorseDetail(context, horse),
-            child: _HorseCard(horse: horse),
-          )).toList(),
+          ...horses
+              .map((horse) => GestureDetector(
+                    onTap: () => navigateToHorseDetail(context, horse),
+                    child: _HorseCard(horse: horse),
+                  ))
+              .toList(),
         ],
       ),
     );
@@ -344,10 +377,12 @@ class _GuideHomeState extends State<GuideHome> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   childAspectRatio: .77,
-                  children: rides.map((ride) => GestureDetector(
-                    onTap: () => navigateToRideDetail(context, ride),
-                    child: _RideAreaCard(ride: ride),
-                  )).toList(),
+                  children: rides
+                      .map((ride) => GestureDetector(
+                            onTap: () => navigateToRideDetail(context, ride),
+                            child: _RideAreaCard(ride: ride),
+                          ))
+                      .toList(),
                 ),
         ],
       ),
@@ -544,7 +579,8 @@ class _BookingCard extends StatelessWidget {
                 ),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: const Color(0xFF723594).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),

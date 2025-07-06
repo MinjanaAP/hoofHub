@@ -4,7 +4,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/guide_model.dart';
+import 'package:frontend/providers/booking_provider.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/BookingScreens/all_rides_page.dart';
 import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
@@ -33,6 +35,7 @@ void main() async {
         providers: [
           ChangeNotifierProvider(create: (_) => AuthProviders()),
           ChangeNotifierProvider(create: (context) => GuideModel()),
+          ChangeNotifierProvider(create: (context) => BookingProvider()),
           Provider(
               create: (_) => Dio()..options.baseUrl = ApiConstants.baseUrl),
         ],

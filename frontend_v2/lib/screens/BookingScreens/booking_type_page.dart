@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
 import 'package:frontend/common/custom_appbar.dart';
+import 'package:frontend/providers/booking_provider.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/BookingScreens/all_rides_page.dart';
 import 'package:frontend/screens/BookingScreens/bookingComponents/continue_button.dart';
 import 'package:frontend/screens/BookingScreens/booking_header.dart';
 import 'package:frontend/screens/BookingScreens/booking_type_card.dart';
 import 'package:frontend/theme.dart';
+import 'package:provider/provider.dart';
 
 class BookingTypePage extends StatefulWidget {
   const BookingTypePage({super.key});
@@ -65,6 +68,10 @@ class _BookingTypePageState extends State<BookingTypePage> {
                     ),
                     onPressed: selectedType != null
                         ? () {
+                            final bookingProvider =
+                                Provider.of<BookingProvider>(context,
+                                    listen: false);
+                            bookingProvider.setRideType(selectedType);
                             Navigator.pushNamed(context, AppRoutes.allRides);
                           }
                         : null,

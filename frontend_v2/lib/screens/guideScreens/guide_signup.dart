@@ -10,6 +10,8 @@ import 'package:frontend/common/signup_text_feild.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/guide_model.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/BookingScreens/bookingComponents/tour_card_skeleton.dart';
+import 'package:frontend/screens/BookingScreens/bookingComponents/tour_cards.dart';
 import 'package:frontend/theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:logger/web.dart';
@@ -28,6 +30,8 @@ class _GuideSignupState extends State<GuideSignup> {
   int _currentStep = 0;
   var logger = Logger();
   bool _isLoading = false;
+  String? selectedTour;
+  bool isTourLoading = false;
   final List<GlobalKey<FormState>> _formKeys = [
     GlobalKey<FormState>(),
     GlobalKey<FormState>(),
@@ -150,13 +154,14 @@ class _GuideSignupState extends State<GuideSignup> {
       formData.updateBio(bioController.text);
       formData.updateExperience(experienceController.text);
       formData.updateLanguages(languagesController.text.split(','));
+      formData.updateRideId(selectedTour);
 
       setState(() => _isLoading = true);
 
       logger
           .i("Guide Data: ${formData.fullName}, ${formData.profileImagePath}");
       logger.i("Horse Data: ${formData.horseName}, ${formData.horseBreed}");
-      logger.i("Profile Data: ${formData.bio}, ${formData.experience}");
+      logger.i("Profile Data: ${formData.rideId}, ${formData.experience}");
 
       try {
         var request = http.MultipartRequest(
@@ -182,6 +187,7 @@ class _GuideSignupState extends State<GuideSignup> {
         request.fields['bio'] = formData.bio;
         request.fields['experience'] = formData.experience;
         request.fields['languages'] = formData.languages.join(',');
+        request.fields['rideId'] = formData.rideId!;
 
         // Attach image
         if (formData.profileImagePath.isNotEmpty) {
@@ -841,6 +847,8 @@ class _GuideSignupState extends State<GuideSignup> {
       child: Form(
         key: _formKeys[2],
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 30),
             const Text(
@@ -908,6 +916,20 @@ class _GuideSignupState extends State<GuideSignup> {
               },
             ),
             const SizedBox(height: 30.0),
+            const Text(
+              "Select your ride area",
+              style: TextStyle(
+                fontSize: 14.0,
+                fontFamily: 'Poppins',
+                fontWeight: FontWeight.w900,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TourCards(
+              selectedTour: selectedTour,
+              onSelect: (id) => setState(() => selectedTour = id),
+            ),
             Row(
               children: [
                 Expanded(

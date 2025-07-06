@@ -23,7 +23,7 @@ class GuideModel extends ChangeNotifier {
   String bio = "";
   String experience = "";
   List<String> languages = [];
-
+  String? rideId = "";
 
   void updateFullName(String newName) {
     fullName = newName;
@@ -108,6 +108,11 @@ class GuideModel extends ChangeNotifier {
 
   void updateLanguages(List<String> newLanguages) {
     languages = newLanguages;
+    notifyListeners();
+  }
+
+  void updateRideId(String? newRideId) {
+    rideId = newRideId;
     notifyListeners();
   }
 }

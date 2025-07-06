@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/constant/api_constants.dart';
+import 'package:frontend/screens/splash_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
