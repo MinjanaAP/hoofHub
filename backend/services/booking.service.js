@@ -77,7 +77,30 @@ export async function getBookingsByGuideIdService(guideId) {
         }
 
         const snapshot = await collection.where("guideId", "==", guideId).get();
-        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        const bookingsWithRiderDetails = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const bookingData = { id: doc.id, ...doc.data() };
+
+                if (bookingData.uid) {
+                    const riderDoc = await db.collection("riders").doc(bookingData.uid).get();
+                    bookingData.rider = riderDoc.exists ? riderDoc.data() : null;
+                } else {
+                    bookingData.rider = null;
+                }
+
+                if (bookingData.rideId) {
+                    const rideDoc = await db.collection("rides").doc(bookingData.rideId).get();
+                    bookingData.ride = rideDoc.exists ? rideDoc.data() : null;
+                } else {
+                    bookingData.ride = null;
+                }
+
+                return bookingData;
+            })
+        );
+
+        return bookingsWithRiderDetails;
     } catch (error) {
         console.error("Error fetching bookings by guide ID:", error);
         throw new Error("Failed to fetch bookings by guide ID");
@@ -94,12 +117,36 @@ export async function getBookingsByRideIdService(rideId) {
         }
 
         const snapshot = await collection.where("rideId", "==", rideId).get();
-        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        const bookingsWithDetails = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const booking = { id: doc.id, ...doc.data() };
+
+                if (booking.uid) {
+                    const riderDoc = await db.collection("riders").doc(booking.uid).get();
+                    booking.rider = riderDoc.exists ? riderDoc.data() : null;
+                } else {
+                    booking.rider = null;
+                }
+
+                if (booking.guideId) {
+                    const guideDoc = await db.collection("guides").doc(booking.guideId).get();
+                    booking.guide = guideDoc.exists ? guideDoc.data() : null;
+                } else {
+                    booking.guide = null;
+                }
+
+                return booking;
+            })
+        );
+
+        return bookingsWithDetails;
     } catch (error) {
         console.error("Error fetching bookings by ride ID:", error);
         throw new Error("Failed to fetch bookings by ride ID");
     }
 }
+
 
 
 export async function getBookingsByUidService(uid) {
@@ -112,7 +159,30 @@ export async function getBookingsByUidService(uid) {
         }
 
         const snapshot = await collection.where("uid", "==", uid).get();
-        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+
+        const bookingsWithDetails = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const booking = { id: doc.id, ...doc.data() };
+
+                if (booking.guideId) {
+                    const guideDoc = await db.collection("guides").doc(booking.guideId).get();
+                    booking.guide = guideDoc.exists ? guideDoc.data() : null;
+                } else {
+                    booking.guide = null;
+                }
+
+                if (booking.rideId) {
+                    const rideDoc = await db.collection("rides").doc(booking.rideId).get();
+                    booking.ride = rideDoc.exists ? rideDoc.data() : null;
+                } else {
+                    booking.ride = null;
+                }
+
+                return booking;
+            })
+        );
+
+        return bookingsWithDetails;
     } catch (error) {
         console.error("Error fetching bookings by user ID:", error);
         throw new Error("Failed to fetch bookings by user ID");
