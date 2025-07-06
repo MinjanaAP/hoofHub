@@ -195,14 +195,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, color: AppColors.primary),
+        // Icon(icon, color: AppColors.primary),
         const SizedBox(width: 8),
         Text(
           title,
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+            color: Color.fromARGB(255, 38, 2, 58),
           ),
         ),
       ],

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/BookingScreens/all_rides_page.dart';
 import 'package:frontend/screens/BookingScreens/booking_type_page.dart';
+import 'package:frontend/screens/BookingScreens/date_time_selection.dart';
+import 'package:frontend/screens/BookingScreens/guide_selection_page.dart';
+import 'package:frontend/screens/BookingScreens/waiting_for_guide_page.dart';
 import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/guideScreens/guide_login.dart';
 import 'package:frontend/screens/guideScreens/guide_page.dart';
 import 'package:frontend/screens/guideScreens/guide_signup.dart';
+import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/horseScreens/horse_details_page.dart';
 
 import 'package:frontend/screens/landing_page.dart';
@@ -21,6 +25,7 @@ class AppRoutes {
   static const String riderLogin = '/riderLogin';
   static const String riderSignUp = '/riderSignUp';
   static const String riderProfile = '/riderProfile';
+  static const String riderHome = '/riderHome';
 
   //? Guide Routes
   static const String guideSignup = '/guideSignup';
@@ -40,6 +45,9 @@ class AppRoutes {
   //?Booking Routes
   static const String bookingType = '/bookingType';
   static const String allRides = '/allRides';
+  static const String dateTimeSelection = '/dateTimeSelection';
+  static const String guideSelection = '/guideSelection';
+  static const String waitForGuide = '/waitForGuide';
 
   static Map<String, WidgetBuilder> routes = {
     //? Initial main home rote
@@ -49,6 +57,7 @@ class AppRoutes {
     riderLogin: (context) => const RiderLoginScreen(),
     riderSignUp: (context) => const RiderSignUp(),
     riderProfile: (context) => RiderProfile(),
+    riderHome: (context) => const HomeScreen(),
 
     //? Guide Routes
     guideSignup: (context) => const GuideSignup(),
@@ -68,6 +77,9 @@ class AppRoutes {
 
     //?Booking Routes
     bookingType: (context) => const BookingTypePage(),
-    allRides : (context) => const AllRidesPage(),
+    allRides: (context) => const AllRidesPage(),
+    dateTimeSelection: (context) => const DateTimeSelection(),
+    guideSelection: (context) => const GuideSelectionPage(),
+    waitForGuide: (context) => const WaitingForGuidePage(),
   };
 }

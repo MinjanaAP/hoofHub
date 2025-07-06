@@ -48,6 +48,7 @@ dependencies:
   image_input: ^0.0.5
   image_picker: ^1.1.2
   shimmer: ^3.0.0
+  lottie: ^2.7.0
 
 dev_dependencies:
   flutter_test:
@@ -86,6 +87,7 @@ flutter:
     - assets/images/g.png
     - assets/images/facebook.png
     - assets/images/
+    - assets/animations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

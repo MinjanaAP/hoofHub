@@ -9,10 +9,10 @@ class RideService {
         List<dynamic> data = response.data['data'];
         return data;
       } else {
-        throw Exception("Failed to load rides");
+        throw Exception("Failed to load popular rides");
       }
     } catch (e) {
-      throw Exception('Failed to load horse: $e');
+      throw Exception('Failed to load popular rides: $e');
     }
   }
 
@@ -25,6 +25,20 @@ class RideService {
     } catch (e) {
       logger.e('error : $e');
       throw Exception('Failed to load horse: $e');
+    }
+  }
+
+   Future<List<dynamic>> getAllRides() async {
+    try {
+      final response = await ApiService.dio.get('/rides');
+      if (response.statusCode == 200 && response.data['status'] == true) {
+        List<dynamic> data = response.data['data'];
+        return data;
+      } else {
+        throw Exception("Failed to load rides");
+      }
+    } catch (e) {
+      throw Exception('Failed to load rides: $e');
     }
   }
 }
