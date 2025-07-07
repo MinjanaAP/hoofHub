@@ -1,5 +1,6 @@
 import { db } from "../config/firebase.js";
 import userService from "../services/user.service.js";
+import sendNotification from "../utils/sendNotification.js";
 
 export const checkUserRole = async (req, res) => {
     const { uid } = req.params;
@@ -33,3 +34,27 @@ export const saveFCMToken = async (req, res) => {
         res.status(500).json({ error: "Failed to save FCM token : ", message: err.message });
     }
 };
+
+export const testNotifications = async (req, res) => {
+    const { uid, role, title,description } = req.body;
+    try {
+        const collection = role === "guide" ? "guides" : "riders";
+        const userDoc = await db.collection(collection).doc(uid).get();
+        const user = userDoc.data();
+
+        if (user?.fcmToken) {
+            await sendNotification(
+                user.fcmToken,
+                title,
+                description
+            );
+        }
+
+        res.json({ success: true, statusCode :200, message: `Notification send to ${user.uid}` });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to save FCM token : ", message: err.message });
+    }
+
+}
+
+

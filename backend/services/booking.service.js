@@ -1,4 +1,5 @@
 import { db } from "../config/firebase.js";
+import sendNotification from "../utils/sendNotification.js";
 
 const collection = db.collection("bookings");
 
@@ -10,6 +11,19 @@ export async function createBookingService(data) {
 
         const newBookingRef = collection.doc();
         await newBookingRef.set(data);
+
+        const guideDoc = await db.collection("guides").doc(data.guideId).get();
+        const guide = guideDoc.data();
+
+        if (guide?.fcmToken) {
+            await sendNotification(
+                guide.fcmToken,
+                "New Booking Received",
+                `You have a new booking on ${data.selectedDate} at ${data.selectedTime}.`,
+                { bookingId: newBookingRef.id }
+            );
+        }
+
         return { id: newBookingRef.id, ...data };
     } catch (error) {
         console.error("Error creating booking:", error);
