@@ -30,9 +30,8 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
   }
 
   void _startListening() async {
-    // In real-time Firebase, you'd use snapshot listeners. Here we simulate polling every 10 seconds.
     Timer.periodic(Duration(seconds: 10), (_) => _fetchBookings());
-    _fetchBookings(); // Initial fetch
+    _fetchBookings(); 
   }
 
   Future<void> _fetchBookings() async {
@@ -164,7 +163,7 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
                               decoration: BoxDecoration(
                                 color: booking['status'] == 'pending'
                                     ? Colors.orange
-                                    : Colors.green,
+                                    :  booking['status'] == 'rejected' ? Colors.red :Colors.green ,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
+import 'package:frontend/common/foreground_alert.dart';
 import 'package:frontend/providers/booking_provider.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/BookingScreens/booking_header.dart';
@@ -20,16 +21,21 @@ class _WaitingForGuidePageState extends State<WaitingForGuidePage> {
   void initState() {
     super.initState();
 
-    // Simulate a delay before checking confirmation (15 seconds her
-    Timer(const Duration(seconds: 15), () {
-      // Clear booking data
+    Timer(const Duration(seconds: 20), () {
       Provider.of<BookingProvider>(context, listen: false).reset();
-
-      // Navigate to allRides and remove all previous routes
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-        (Route<dynamic> route) => false,
+      showCustomDialog(
+        context: context,
+        title: 'Booking Submitted Successfully',
+        body:
+            'Your booking request has been placed in the pending queue. You will be notified once the guide confirms the booking, at which point you may proceed with the payment.',
+        buttonText: 'OK',
+        onConfirm: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (Route<dynamic> route) => false,
+          );
+        },
       );
     });
   }

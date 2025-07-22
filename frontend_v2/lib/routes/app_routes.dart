@@ -13,6 +13,7 @@ import 'package:frontend/screens/horseScreens/horse_details_page.dart';
 
 import 'package:frontend/screens/landing_page.dart';
 import 'package:frontend/screens/ride_page.dart';
+import 'package:frontend/screens/riderScreens/rider_booking_page.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_profile.dart';
 import 'package:frontend/screens/riderScreens/rider_signup.dart';
@@ -26,6 +27,7 @@ class AppRoutes {
   static const String riderSignUp = '/riderSignUp';
   static const String riderProfile = '/riderProfile';
   static const String riderHome = '/riderHome';
+  static const String riderBookings = '/riderBookings';
 
   //? Guide Routes
   static const String guideSignup = '/guideSignup';
@@ -58,6 +60,7 @@ class AppRoutes {
     riderSignUp: (context) => const RiderSignUp(),
     riderProfile: (context) => RiderProfile(),
     riderHome: (context) => const HomeScreen(),
+    riderBookings: (context) => const RiderBookingsPage(),
 
     //? Guide Routes
     guideSignup: (context) => const GuideSignup(),

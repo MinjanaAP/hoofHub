@@ -7,6 +7,7 @@ import 'package:frontend/common/home_carousel.dart';
 import 'package:frontend/common/home_search_bar.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/services/ride_service.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/logger.dart';
@@ -32,6 +33,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     fetchData();
     popularRides = RideService().getPopularRides();
+
+    final user = FirebaseAuth.instance.currentUser;
+    const role = "rider"; 
+
+    if (user != null) {
+      AuthService().setupFCM(user.uid, role);
+    }
+    
   }
 
   Future<void> fetchData() async {
