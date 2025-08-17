@@ -129,7 +129,7 @@ class _GuideSelectionPageState extends State<GuideSelectionPage> {
                                                     guideImage != ''
                                                 ? NetworkImage(guideImage)
                                                 : const AssetImage(
-                                                        'assets/images/default_user.png')
+                                                        'assets/images/sample-avatar.jpg')
                                                     as ImageProvider,
                                           ),
                                           const SizedBox(width: 16),

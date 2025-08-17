@@ -22,6 +22,14 @@ class _HomeAppBarState extends State<HomeAppBar> {
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
 
+    ImageProvider profileImage;
+
+    if (user?.photoURL != null) {
+      profileImage = NetworkImage(user!.photoURL!);
+    } else {
+      profileImage = const AssetImage('assets/images/profilePic.jpg');
+    }
+
     return AppBar(
       backgroundColor: AppColors.primary,
       elevation: 0,
@@ -73,9 +81,10 @@ class _HomeAppBarState extends State<HomeAppBar> {
               ],
             ),
             user != null
-                ? const CircleAvatar(
+                ? CircleAvatar(
                     radius: 20.0,
-                    backgroundImage: AssetImage('assets/images/profilePic.jpg'),
+                    backgroundImage: profileImage,
+                    
                   )
                 : ElevatedButton.icon(
                     onPressed: () {

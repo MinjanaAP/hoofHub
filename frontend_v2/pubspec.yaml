@@ -44,6 +44,8 @@ dependencies:
   flutter_facebook_auth: ^6.0.3
   provider: ^6.0.5
   firebase_core: ^3.12.1
+  firebase_messaging: ^15.2.4
+  cloud_firestore: ^5.0.1
   carousel_slider: ^5.0.0
   image_input: ^0.0.5
   image_picker: ^1.1.2

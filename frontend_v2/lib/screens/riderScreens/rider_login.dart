@@ -8,6 +8,7 @@ import 'package:frontend/theme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:logger/logger.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RiderLoginScreen extends StatefulWidget {
   const RiderLoginScreen({super.key});
@@ -89,28 +90,42 @@ class _RiderLoginScreenState extends State<RiderLoginScreen> {
     }
   }
 
-Future<void> signInWithGoogle() async {
-  try {
+  Future<void> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
 
-    if (googleUser == null) return;
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
 
-    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithCredential(credential);
 
-    UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-
-    User? user = userCredential.user;
-    print('Google Sign-In successful: ${user?.email}');
-  } catch (e) {
-    print('Google Sign-In failed: $e');
+      User? user = userCredential.user;
+      if (user != null) {
+        logger.i('Google Sign-In successful: ${user.email}');
+        await saveRiderToFirestore(user);
+      }
+    } catch (e) {
+      logger.e('Google Sign-In failed: $e');
+    }
   }
-}
+
+  Future<void> saveRiderToFirestore(User user) async {
+    await FirebaseFirestore.instance.collection('riders').doc(user.uid).set({
+      'name': user.displayName,
+      'email': user.email,
+      'phone': user.phoneNumber,
+      'role': 'rider',
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +133,7 @@ Future<void> signInWithGoogle() async {
       resizeToAvoidBottomInset: true,
       appBar: const CustomAppBar(
         title: "hoofHub",
-        showBackButton: false,
+        showBackButton: true,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -203,6 +218,7 @@ Future<void> signInWithGoogle() async {
                               const SizedBox(height: 7.0),
                               CustomTextFormField(
                                 hintText: 'Your email here.',
+                                prefixIcon: Icons.email_outlined,
                                 controller: emailController,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -231,6 +247,7 @@ Future<void> signInWithGoogle() async {
                               CustomTextFormField(
                                 hintText: "Enter your password.",
                                 controller: passwordController,
+                                prefixIcon: Icons.lock_outline,
                                 obscureText: true,
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
@@ -292,20 +309,23 @@ Future<void> signInWithGoogle() async {
                     ),
                   ),
                 ),
-                const SizedBox(
-                  height: 21.0,
-                ),
-                const Text(
-                  "Forgot Password ?",
-                  style: TextStyle(
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w400,
-                    color: AppColors.primary,
-                    fontFamily: 'Poppins',
+                // const SizedBox(
+                //   height: 21.0,
+                // ),
+                TextButton(
+                  onPressed: () {
+                        Navigator.pushNamed(
+                            context, AppRoutes.forgotPassword);
+                      },
+                  child: const Text(
+                    "Forgot Password ?",
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.primary,
+                      fontFamily: 'Poppins',
+                    ),
                   ),
-                ),
-                const SizedBox(
-                  height: 8.0,
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -325,7 +345,7 @@ Future<void> signInWithGoogle() async {
                     ),
                     TextButton(
                       onPressed: () {
-                        Navigator.pushReplacementNamed(
+                        Navigator.pushNamed(
                             context, AppRoutes.riderSignUp);
                       },
                       child: const Text(
@@ -340,9 +360,9 @@ Future<void> signInWithGoogle() async {
                     ),
                   ],
                 ),
-                const SizedBox(
-                  height: 21.0,
-                ),
+                // const SizedBox(
+                //   height: 21.0,
+                // ),
                 const Text(
                   'OR',
                   style: TextStyle(
@@ -353,10 +373,10 @@ Future<void> signInWithGoogle() async {
                   ),
                 ),
                 const SizedBox(
-                  height: 21.0,
+                  height: 16.0,
                 ),
                 const Text(
-                  'Login with social account',
+                  'Login with Google account',
                   style: TextStyle(
                     fontSize: 13.0,
                     fontWeight: FontWeight.w300,
@@ -379,49 +399,27 @@ Future<void> signInWithGoogle() async {
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 40.0, vertical: 0.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ElevatedButton(
-                          onPressed: () {
-                            print('Google');
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                height: 20,
-                                child: Image.asset('assets/images/g.png',
-                                    fit: BoxFit.contain),
-                              ),
-                              const SizedBox(
-                                width: 12,
-                              ),
-                              const Text('Google'),
-                            ],
-                          )),
-                      ElevatedButton(
-                          onPressed: () {
-                            print('FaceBook');
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                height: 20,
-                                child: Image.asset('assets/images/facebook.png',
-                                    fit: BoxFit.contain),
-                              ),
-                              const SizedBox(
-                                width: 12,
-                              ),
-                              const Text('FaceBook'),
-                            ],
-                          )),
-                    ],
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      await signInWithGoogle();
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()),
+                      );
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 20,
+                          child: Image.asset('assets/images/g.png',
+                              fit: BoxFit.contain),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text('Google'),
+                      ],
+                    ),
                   ),
                 )
               ],

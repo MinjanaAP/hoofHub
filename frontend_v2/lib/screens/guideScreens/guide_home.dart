@@ -9,6 +9,7 @@ import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/ride_model.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/services/api_service.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class GuideHome extends StatefulWidget {
@@ -35,6 +36,13 @@ class _GuideHomeState extends State<GuideHome> {
     super.initState();
     fetchGuideData();
     fetchRides();
+
+    final user = FirebaseAuth.instance.currentUser;
+    const role = "guide"; 
+
+    if (user != null) {
+      AuthService().setupFCM(user.uid, role);
+    }
   }
 
   Future<void> fetchGuideData() async {

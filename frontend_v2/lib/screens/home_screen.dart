@@ -4,9 +4,11 @@ import 'package:frontend/common/bottom_nav_bar.dart';
 import 'package:frontend/common/greetin_card.dart';
 import 'package:frontend/common/home_appbar.dart';
 import 'package:frontend/common/home_carousel.dart';
+import 'package:frontend/common/home_content.dart';
 import 'package:frontend/common/home_search_bar.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
+import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/services/ride_service.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/logger.dart';
@@ -32,6 +34,14 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     fetchData();
     popularRides = RideService().getPopularRides();
+
+    final user = FirebaseAuth.instance.currentUser;
+    const role = "rider"; 
+
+    if (user != null) {
+      AuthService().setupFCM(user.uid, role);
+    }
+    
   }
 
   Future<void> fetchData() async {
@@ -105,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return const Center(
                             child: Text("No popular rides found."));
                       }
-
+        
                       return buildPopularRidesList(snapshot.data!);
                     },
                   ),
@@ -115,15 +125,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 12),
                   _buildPreviousRidesList(),
                   const SizedBox(height: 24),
-                  _buildQuickActions(),
-                  const SizedBox(height: 24),
+                  // _buildQuickActions(),
+                  // const SizedBox(height: 24),
+                  const HomeContent(),
                 ]),
               ),
             ),
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 0,),
     );
   }
 
@@ -202,7 +213,8 @@ class _HomeScreenState extends State<HomeScreen> {
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 38, 2, 58),
+            fontFamily: 'Poppins',
+            color: Color.fromARGB(255, 45, 1, 69),
           ),
         ),
       ],

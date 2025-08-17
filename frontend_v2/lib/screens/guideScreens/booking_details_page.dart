@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/services/booking_service.dart';
+import 'package:frontend/services/notification_service.dart';
 import 'package:intl/intl.dart';
 
 class BookingDetailsPage extends StatefulWidget {
@@ -414,14 +415,13 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         ? {
             'reason':
                 _rejectionReason == 'Other' ? _customReason : _rejectionReason,
-            
           }
         : null;
 
     final String? rejectionReason = _selectedStatus == 'rejected'
-    ? (_rejectionReason == 'Other' ? _customReason : _rejectionReason)
-    : null;
-    
+        ? (_rejectionReason == 'Other' ? _customReason : _rejectionReason)
+        : null;
+
     try {
       // Show loading indicator
       showDialog(
@@ -430,26 +430,24 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Call your API here
-      // await BookingService.updateStatus(
-      //   bookingId: widget.booking['id'],
-      //   status: _selectedStatus!,
-      //   rejectionData: rejectionData,
-      // );
-
       await BookingService.updateBookingStatus(
         bookingId: widget.booking['id'],
         status: _selectedStatus!,
         rejectionReason: rejectionReason,
       );
 
-      // Simulate API call delay
+      await NotificationService.sendNotification(
+          uid: widget.booking['uid'],
+          role: 'rider',
+          title: 'Guide response to your booking of ${widget.booking['ride']['title']}',
+          description:
+              'Your booking on ${widget.booking['selectedDate']} is $_selectedStatus by guide.');
+
       await Future.delayed(const Duration(seconds: 1));
 
-      // Close loading indicator
       Navigator.pop(context);
 
-      // Show success message
+      //? Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Status updated to $_selectedStatus'),
@@ -457,7 +455,6 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         ),
       );
 
-      // Navigate back with updated data
       Navigator.pop(context, {
         ...widget.booking,
         'status': _selectedStatus,
