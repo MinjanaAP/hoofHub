@@ -154,7 +154,7 @@ class _AuthCheckState extends State<AuthCheck> {
         _navigateTo(const SelectProfile());
       }
     } catch (e) {
-      print("Authentication check error: $e");
+      logger.e("Authentication check error: $e");
       _navigateTo(const SelectProfile());
     }
   }

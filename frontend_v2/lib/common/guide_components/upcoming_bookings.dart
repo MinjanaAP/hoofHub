@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/screens/guideScreens/booking_details_page.dart';
+import 'package:frontend/screens/home_screen.dart';
 import 'package:http/http.dart' as http;
 
 class UpcomingBookingsWidget extends StatefulWidget {
@@ -31,7 +32,7 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
 
   void _startListening() async {
     Timer.periodic(Duration(seconds: 10), (_) => _fetchBookings());
-    _fetchBookings(); 
+    _fetchBookings();
   }
 
   Future<void> _fetchBookings() async {
@@ -41,6 +42,7 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
       final response = await http.get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        // logger.i(data);
         _bookingController.add(data);
       } else {
         _bookingController.addError("Failed to load bookings");
@@ -163,7 +165,9 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
                               decoration: BoxDecoration(
                                 color: booking['status'] == 'pending'
                                     ? Colors.orange
-                                    :  booking['status'] == 'rejected' ? Colors.red :Colors.green ,
+                                    : booking['status'] == 'rejected'
+                                        ? Colors.red
+                                        : Colors.green,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
@@ -246,6 +250,7 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
                           const SizedBox(height: 12),
 
                           // Rider info
+                          // Rider info
                           Text(
                             'Rider Information',
                             style: TextStyle(
@@ -254,32 +259,40 @@ class _UpcomingBookingsWidgetState extends State<UpcomingBookingsWidget> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: Colors.grey[200],
-                                child: const Icon(Icons.person,
-                                    color: Colors.grey),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                          rider != null
+                              ? Row(
                                   children: [
-                                    Text(
-                                      rider['name'],
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold),
+                                    CircleAvatar(
+                                      backgroundColor: Colors.grey[200],
+                                      child: const Icon(Icons.person,
+                                          color: Colors.grey),
                                     ),
-                                    Text(
-                                      rider['mobileNumber'],
-                                      style: TextStyle(color: Colors.grey[600]),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            rider['name'] ?? 'No name',
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            rider['mobileNumber'] ??
+                                                'No phone number',
+                                            style: TextStyle(
+                                                color: Colors.grey[600]),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ],
+                                )
+                              : Text(
+                                  "No rider information available",
+                                  style: TextStyle(color: Colors.grey[600]),
                                 ),
-                              ),
-                            ],
-                          ),
                         ],
                       ),
                     ),

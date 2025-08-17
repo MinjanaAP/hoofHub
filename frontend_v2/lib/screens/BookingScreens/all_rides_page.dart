@@ -44,7 +44,7 @@ class _AllRidesPageState extends State<AllRidesPage> {
           ContinueButton(isEnabled: selectedTour != null, tourId: selectedTour),
         ],
       ),
-      bottomNavigationBar: const BottomNavBar(),
+      bottomNavigationBar: const BottomNavBar(selectedIndex: 1,),
     );
   }
 }

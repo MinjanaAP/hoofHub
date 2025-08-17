@@ -2,18 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:frontend/theme.dart';
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({super.key});
+  final int selectedIndex;
+  const BottomNavBar({super.key,
+    this.selectedIndex =0,
+  });
 
   @override
   State<BottomNavBar> createState() => _BottomNavBarState();
 }
 
 class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.selectedIndex;
+  }
+  
 
   // Map index to route names or page navigation
   void _onItemTapped(int index) {
-    if (_selectedIndex == index) return; 
+    // if (_selectedIndex == index) return; 
 
     setState(() {
       _selectedIndex = index;
@@ -21,7 +31,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
     switch (index) {
       case 0:
-        Navigator.pushNamed(context, '/allRides');
+        Navigator.pushNamed(context, '/riderHome');
         break;
       case 1:
         Navigator.pushNamed(context, '/allRides');

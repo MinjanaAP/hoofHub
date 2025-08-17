@@ -24,6 +24,15 @@ class RiderProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final User? user = FirebaseAuth.instance.currentUser;
+
+    ImageProvider profileImage;
+
+    if (user?.photoURL != null) {
+      profileImage = NetworkImage(user!.photoURL!);
+    } else {
+      profileImage = const AssetImage('assets/images/profilePic.jpg');
+    }
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: const CustomAppBar(
@@ -63,11 +72,10 @@ class RiderProfile extends StatelessWidget {
                             width: 4,
                           ),
                         ),
-                        child: const CircleAvatar(
+                        child: CircleAvatar(
                           radius: 60,
                           backgroundColor: Colors.white,
-                          backgroundImage:
-                              AssetImage("assets/images/profilePic.jpg"),
+                          backgroundImage: profileImage,
                         ),
                       ),
                     ),

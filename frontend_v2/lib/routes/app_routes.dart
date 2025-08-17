@@ -4,6 +4,8 @@ import 'package:frontend/screens/BookingScreens/booking_type_page.dart';
 import 'package:frontend/screens/BookingScreens/date_time_selection.dart';
 import 'package:frontend/screens/BookingScreens/guide_selection_page.dart';
 import 'package:frontend/screens/BookingScreens/waiting_for_guide_page.dart';
+import 'package:frontend/screens/about_us_page.dart';
+import 'package:frontend/screens/auth/forgot_password.dart';
 import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/guideScreens/guide_login.dart';
 import 'package:frontend/screens/guideScreens/guide_page.dart';
@@ -43,6 +45,7 @@ class AppRoutes {
   static const String loadingPage = '/loadingPage';
   static const String guideHome = '/guideHome';
   static const String ridePage = '/ridePage';
+  static const String aboutUs = '/aboutUs';
 
   //?Booking Routes
   static const String bookingType = '/bookingType';
@@ -50,6 +53,9 @@ class AppRoutes {
   static const String dateTimeSelection = '/dateTimeSelection';
   static const String guideSelection = '/guideSelection';
   static const String waitForGuide = '/waitForGuide';
+
+  //? auth Routes
+  static const String forgotPassword = '/forgotPassword';
 
   static Map<String, WidgetBuilder> routes = {
     //? Initial main home rote
@@ -77,6 +83,7 @@ class AppRoutes {
     loadingPage: (context) => const LandingPage(),
     selectProfile: (context) => const SelectProfile(),
     ridePage: (context) => const RidePage(),
+    aboutUs: (context) => const AboutUsPage(),
 
     //?Booking Routes
     bookingType: (context) => const BookingTypePage(),
@@ -84,5 +91,8 @@ class AppRoutes {
     dateTimeSelection: (context) => const DateTimeSelection(),
     guideSelection: (context) => const GuideSelectionPage(),
     waitForGuide: (context) => const WaitingForGuidePage(),
+
+    //? auth routes
+    forgotPassword : (context) => const ForgotPassword(),
   };
 }
