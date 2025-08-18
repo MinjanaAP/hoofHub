@@ -27,7 +27,7 @@ class _HomeAppBarState extends State<HomeAppBar> {
     if (user?.photoURL != null) {
       profileImage = NetworkImage(user!.photoURL!);
     } else {
-      profileImage = const AssetImage('assets/images/profilePic.jpg');
+      profileImage = const AssetImage('assets/images/avatar-sample.jpg');
     }
 
     return AppBar(
@@ -81,11 +81,14 @@ class _HomeAppBarState extends State<HomeAppBar> {
               ],
             ),
             user != null
-                ? CircleAvatar(
-                    radius: 20.0,
-                    backgroundImage: profileImage,
-                    
-                  )
+                ? IconButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.riderProfile);
+                    },
+                    icon: CircleAvatar(
+                      backgroundImage: profileImage,
+                      radius: 20,
+                    ))
                 : ElevatedButton.icon(
                     onPressed: () {
                       Navigator.pushReplacementNamed(
