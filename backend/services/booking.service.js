@@ -45,6 +45,44 @@ export async function getBookingByIdService(id) {
     }
 }
 
+export async function getBookingByIdWithDetailsService(id) {
+    try {
+        if (!id) throw new Error("Booking ID is required");
+
+        const doc = await collection.doc(id).get();
+        if (!doc.exists) return null;
+
+        const booking = { id: doc.id, ...doc.data() };
+
+        if (booking.guideId) {
+            const guideDoc = await db.collection("guides").doc(booking.guideId).get();
+            booking.guide = guideDoc.exists ? guideDoc.data() : null;
+        } else {
+            booking.guide = null;
+        }
+
+        if (booking.rideId) {
+            const rideDoc = await db.collection("rides").doc(booking.rideId).get();
+            booking.ride = rideDoc.exists ? rideDoc.data() : null;
+        } else {
+            booking.ride = null;
+        }
+
+        const riderId = booking.uid || booking.riderId;
+        if (riderId) {
+            const riderDoc = await db.collection("riders").doc(riderId).get();
+            booking.rider = riderDoc.exists ? riderDoc.data() : null;
+        } else {
+            booking.rider = null;
+        }
+
+        return booking;
+    } catch (error) {
+        console.error("Error fetching booking by ID with details:", error);
+        throw new Error("Failed to fetch booking by ID with details");
+    }
+}
+
 export async function getAllBookingsService() {
     try {
         const snapshot = await collection.get();
@@ -52,6 +90,47 @@ export async function getAllBookingsService() {
     } catch (error) {
         console.error("Error fetching all bookings:", error);
         throw new Error("Failed to fetch all bookings");
+    }
+}
+
+export async function getAllBookingsWithDetailsService() {
+    try {
+        const snapshot = await collection.get();
+
+        const bookingsWithDetails = await Promise.all(
+            snapshot.docs.map(async (doc) => {
+                const booking = { id: doc.id, ...doc.data() };
+
+                if (booking.guideId) {
+                    const guideDoc = await db.collection("guides").doc(booking.guideId).get();
+                    booking.guide = guideDoc.exists ? guideDoc.data() : null;
+                } else {
+                    booking.guide = null;
+                }
+
+                if (booking.rideId) {
+                    const rideDoc = await db.collection("rides").doc(booking.rideId).get();
+                    booking.ride = rideDoc.exists ? rideDoc.data() : null;
+                } else {
+                    booking.ride = null;
+                }
+
+                const riderId = booking.uid || booking.riderId;
+                if (riderId) {
+                    const riderDoc = await db.collection("riders").doc(riderId).get();
+                    booking.rider = riderDoc.exists ? riderDoc.data() : null;
+                } else {
+                    booking.rider = null;
+                }
+
+                return booking;
+            })
+        );
+
+        return bookingsWithDetails;
+    } catch (error) {
+        console.error("Error fetching all bookings with details:", error);
+        throw new Error("Failed to fetch all bookings with details");
     }
 }
 
