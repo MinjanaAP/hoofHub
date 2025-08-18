@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
+import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/theme.dart';
 import 'package:intl/intl.dart';
@@ -30,7 +31,7 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   Future<Map<String, dynamic>> _fetchBookingDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('https://hoofhub.onrender.com/api/bookings/${widget.bookingId}/details'),
+        Uri.parse('${ApiConstants.baseUrl}/bookings/${widget.bookingId}/details'),
       );
       // logger.e('Booking details response: ${response.body}');
       if (response.statusCode == 200) {
