@@ -1,8 +1,10 @@
 import { Router } from "express";
 const router = Router();
-import { createBooking, getAllBookings, getBookingById, updateBooking, deleteBooking, getByGuideId, getByRideId, getByUid } from "../controllers/booking.controller.js";
+import { createBooking, getAllBookings, getBookingById, updateBooking, deleteBooking, getByGuideId, getByRideId, getByUid, getAllBookingsWithDetails, getBookingByIdWithDetails } from "../controllers/booking.controller.js";
 
 router.post("/", createBooking);
+router.get("/details", getAllBookingsWithDetails);
+router.get("/:id/details", getBookingByIdWithDetails);
 router.get("/", getAllBookings);
 router.get("/:id", getBookingById);
 router.put("/:id", updateBooking);
