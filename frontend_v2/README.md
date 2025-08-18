@@ -20,3 +20,8 @@ samples, guidance on mobile development, and a full API reference.
 guide signup is ok, with profile images and horse images.
 # todo : create guide home pages
 # todo : create rides in admin
+
+# 08/21
+# Done : feat(api/ui) : add google login & forgot password fn
+>> - complete the home page widgets.
+>> - add about us page."
