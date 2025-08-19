@@ -212,11 +212,11 @@ class SectionTitle extends StatelessWidget {
     return Text(
       title,
       style: const TextStyle(
-          fontSize: 20,
-        fontWeight: FontWeight.bold,
-        fontFamily: 'Poppins',
-        color: Color.fromARGB(255, 45, 1, 69), // Updated color
-      ),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Poppins',
+            color: Color.fromARGB(255, 55, 3, 83)
+          ),
     );
   }
 }
@@ -310,9 +310,10 @@ class DiscoverSection extends StatelessWidget {
         const Text(
           "Discover Unforgettable Horse Riding Experiences",
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             fontFamily: 'Poppins',
+            color: Color.fromARGB(255, 55, 3, 83)
           ),
         ),
         Image.asset(
@@ -388,7 +389,7 @@ class FeatureTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: AppColors.primary),
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Color.fromARGB(255, 55, 3, 83))),
       subtitle: Text(description),
     );
   }

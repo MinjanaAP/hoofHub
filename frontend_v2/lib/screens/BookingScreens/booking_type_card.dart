@@ -26,7 +26,7 @@ final List<BookingType> bookingTypes = [
     id: 'couple',
     title: 'Couple Ride',
     description: 'A romantic experience for two',
-    icon: Icons.heart_broken_outlined
+    icon: Icons.favorite_border_outlined
   ),
   BookingType(
     id: 'kids',
