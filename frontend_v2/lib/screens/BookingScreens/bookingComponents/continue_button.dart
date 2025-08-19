@@ -18,7 +18,7 @@ class ContinueButton extends StatelessWidget {
       right: 0,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: ElevatedButton.icon(
+        child: ElevatedButton(
           onPressed: isEnabled
               ? () {
                   final bookingProvider =
@@ -31,8 +31,6 @@ class ContinueButton extends StatelessWidget {
                   Navigator.pushNamed(context, AppRoutes.dateTimeSelection);
                 }
               : null,
-          icon: const Icon(Icons.arrow_forward),
-          label: const Text("Continue to Booking"),
           style: ElevatedButton.styleFrom(
             backgroundColor:
                 isEnabled ? const Color(0xFF723594) : Colors.grey[300],
@@ -42,6 +40,15 @@ class ContinueButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             elevation: isEnabled ? 4 : 0,
+          ),
+          child: Row(
+            mainAxisAlignment:
+                MainAxisAlignment.center, 
+            children: [
+              const Text("Continue to Booking"),
+              const SizedBox(width: 8), 
+              Icon(Icons.arrow_forward, color: isEnabled ? Colors.white : Colors.grey[600]),
+            ],
           ),
         ),
       ),

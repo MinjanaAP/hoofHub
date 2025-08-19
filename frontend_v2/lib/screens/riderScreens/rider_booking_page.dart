@@ -3,10 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
 import 'package:frontend/common/custom_appbar.dart';
-import 'package:frontend/screens/guideScreens/booking_details_page.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/riderScreens/rider_booking_details_page.dart';
 import 'package:frontend/screens/skeletons/booking_card_skelton.dart';
+import 'package:frontend/screens/skeletons/custom_loading_page.dart';
 import 'package:frontend/theme.dart';
 import 'package:intl/intl.dart';
 
@@ -51,14 +51,14 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return Colors.orange;
+        return const Color.fromARGB(255, 147, 111, 53);
       case 'accepted':
       case 'completed':
-        return Colors.blue;
+        return const Color.fromARGB(255, 53, 87, 147);
       case 'confirmed':
-        return Colors.green;
+        return const Color.fromARGB(255, 53, 147, 59);
       case 'rejected':
-        return Colors.red;
+        return const Color.fromARGB(255, 147, 59, 53);
       default:
         return Colors.grey;
     }
@@ -85,11 +85,12 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
-            );
+            // return const Center(
+            //   child: CircularProgressIndicator(
+            //     color: AppColors.primary,
+            //   ),
+            // );
+            return const CustomLoadingScreen();
           }
 
           final docs = snapshot.data!.docs;
@@ -177,10 +178,11 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
         children: [
           Text(
             title,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primary,
-                ),
+            style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Poppins',
+                color: Color.fromARGB(255, 55, 3, 83)),
           ),
           const SizedBox(width: 8),
           Container(

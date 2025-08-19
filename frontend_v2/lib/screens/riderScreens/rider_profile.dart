@@ -165,7 +165,9 @@ class RiderProfile extends StatelessWidget {
                       width: 12.0,
                     ),
                     ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, AppRoutes.riderBookings);
+                      },
                       label: const Text(
                         "Pending Rides",
                         style: TextStyle(

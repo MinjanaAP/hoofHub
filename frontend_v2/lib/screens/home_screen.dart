@@ -211,10 +211,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           title,
           style: const TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             fontFamily: 'Poppins',
-            color: Color.fromARGB(255, 45, 1, 69),
+            color: Color.fromARGB(255, 55, 3, 83)
           ),
         ),
       ],

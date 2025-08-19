@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/theme.dart';
 
 class HomeCarousel extends StatelessWidget {
@@ -81,7 +82,9 @@ class HomeCarousel extends StatelessWidget {
                       SizedBox(
                         width: 150.0,
                         child: ElevatedButton(
-                          onPressed: (){}, 
+                          onPressed: (){
+                            Navigator.pushNamed(context, AppRoutes.bookingType);
+                          }, 
                           child:const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [

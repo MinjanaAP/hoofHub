@@ -1,21 +1,27 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/tour_model.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:frontend/screens/skeletons/custom_loading_page.dart';
-import 'package:http/http.dart' as http;
+import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/services/api_service.dart';
 
 class TourCards extends StatefulWidget {
   final String? selectedTour;
   final Function(String id) onSelect;
   final Function(bool)? onLoading;
+  final String searchQuery;
+  final String locationFilter;
+  final String difficultyFilter;
+  final String sortBy;
 
   const TourCards({
     super.key,
     required this.selectedTour,
     required this.onSelect,
     this.onLoading,
+    this.searchQuery = '',
+    this.locationFilter = 'All',
+    this.difficultyFilter = 'All',
+    this.sortBy = 'rating',
   });
 
   @override
@@ -24,7 +30,16 @@ class TourCards extends StatefulWidget {
 
 class _TourCardsState extends State<TourCards> {
   List<Tour> _tours = [];
+  List<Tour> _filteredTours = [];
   bool isLoading = true;
+
+  void _notifyParentLoading(bool loading) {
+    if (widget.onLoading == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      widget.onLoading!(loading);
+    });
+  }
 
   @override
   void initState() {
@@ -32,42 +47,143 @@ class _TourCardsState extends State<TourCards> {
     fetchTours();
   }
 
-  Future<void> fetchTours() async {
-    widget.onLoading?.call(true);
-    try {
-      final response =
-          await http.get(Uri.parse("${ApiConstants.baseUrl}/rides"));
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          _tours = data.map((json) => Tour.fromJson(json)).toList();
-          isLoading = false;
-        });
-      } else {
-        throw Exception("Failed to load tours");
-      }
-    } catch (e) {
-      print("Error fetching tours: $e");
-      setState(() => isLoading = false);
-    }finally {
-    widget.onLoading?.call(false);
+  @override
+  void didUpdateWidget(covariant TourCards oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.locationFilter != widget.locationFilter ||
+        oldWidget.difficultyFilter != widget.difficultyFilter ||
+        oldWidget.sortBy != widget.sortBy) {
+      _applyFiltersAndSort();
+    }
   }
+
+  Future<void> fetchTours() async {
+    _notifyParentLoading(true);
+    try {
+      final response = await ApiService.dio.get('/rides');
+      final rides = response.data;
+      // logger.i("Fetched rides: $rides");
+      setState(() {
+        _tours = rides
+            .map<Tour>((json) => Tour.fromApi(json as Map<String, dynamic>))
+            .toList();
+        _applyFiltersAndSort();
+        isLoading = false;
+      });
+      logger.i("Tours fetched successfully: ${_tours.length}");
+    } catch (e) {
+      logger.e("Error fetching tours: $e");
+      setState(() => isLoading = false);
+    } finally {
+      _notifyParentLoading(false);
+    }
+  }
+
+  void _applyFiltersAndSort() {
+    //* Apply filters first
+    _filteredTours = _tours.where((tour) {
+      // Search filter
+      final matchesSearch = widget.searchQuery.isEmpty ||
+          tour.name.toLowerCase().contains(widget.searchQuery.toLowerCase()) ||
+          tour.location
+              .toLowerCase()
+              .contains(widget.searchQuery.toLowerCase());
+
+      //* Location filter
+      final matchesLocation = widget.locationFilter == 'All' ||
+          tour.location == widget.locationFilter;
+
+      //* Difficulty filter
+      final matchesDifficulty = widget.difficultyFilter == 'All' ||
+          (tour.specifications?['difficulty']?.toString().toLowerCase() ??
+                  '') ==
+              widget.difficultyFilter.toLowerCase();
+
+      return matchesSearch && matchesLocation && matchesDifficulty;
+    }).toList();
+
+    _applySorting();
+  }
+
+  void _applySorting() {
+    switch (widget.sortBy) {
+      case 'rating':
+        _filteredTours.sort((a, b) => b.rating.compareTo(a.rating));
+        break;
+      case 'price':
+        _filteredTours.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'duration':
+        _filteredTours.sort((a, b) {
+          // Extract numeric value from duration string (e.g., "2 hours" -> 2)
+          final aDuration = _parseDuration(a.duration);
+          final bDuration = _parseDuration(b.duration);
+          return aDuration.compareTo(bDuration);
+        });
+        break;
+      default:
+        _filteredTours.sort((a, b) => b.rating.compareTo(a.rating));
+    }
+  }
+
+  int _parseDuration(String duration) {
+    try {
+      //* Extract duration in h s
+      final regex = RegExp(r'(\d+)');
+      final match = regex.firstMatch(duration);
+      if (match != null) {
+        return int.parse(match.group(1)!);
+      }
+      return 0;
+    } catch (e) {
+      return 0;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      // return const CustomLoadingScreen();
-      return const SizedBox.shrink();
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
     }
 
-    if (_tours.isEmpty) {
-      return const Center(child: Text("No tours available."));
+    if (_filteredTours.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.search_off, size: 48, color: Colors.grey),
+            const SizedBox(height: 16),
+            Text(
+              "No tours found",
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "Try adjusting your search or filters",
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.grey),
+            ),
+          ],
+        ),
+      );
     }
 
-    return Column(
-      children: _tours.map((tour) {
+    return ListView.builder(
+      shrinkWrap: true, // important inside another scrollable
+      physics: const NeverScrollableScrollPhysics(), // parent ListView scrolls
+      itemCount: _filteredTours.length,
+      itemBuilder: (context, index) {
+        final tour = _filteredTours[index];
         final isSelected = widget.selectedTour == tour.id;
+
         return GestureDetector(
           onTap: () => widget.onSelect(tour.id),
           child: AnimatedContainer(
@@ -90,19 +206,21 @@ class _TourCardsState extends State<TourCards> {
             child: buildTourCard(tour),
           ),
         );
-      }).toList(),
+      },
     );
   }
 
   Widget buildTourCard(Tour tour) {
     final isSelected = widget.selectedTour == tour.id;
+    final difficulty =
+        tour.specifications?['difficulty'] as String? ?? 'Not specified';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
           children: [
-            ClipRRect(           
+            ClipRRect(
               borderRadius:
                   const BorderRadius.vertical(top: Radius.circular(16)),
               child: Image.network(
@@ -110,6 +228,12 @@ class _TourCardsState extends State<TourCards> {
                 height: 180,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  height: 180,
+                  color: Colors.grey[200],
+                  child:
+                      const Icon(Icons.image_not_supported, color: Colors.grey),
+                ),
               ),
             ),
             Positioned(
@@ -123,13 +247,12 @@ class _TourCardsState extends State<TourCards> {
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  tour.price,
-                  style: const TextStyle(fontSize: 12),
+                  'LKR ${tour.price}',
+                  style: const TextStyle(
+                      fontSize: 12, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-
-            // ✅ Selection check mark
             if (isSelected)
               const Positioned(
                 top: 12,
@@ -146,7 +269,6 @@ class _TourCardsState extends State<TourCards> {
           padding: const EdgeInsets.all(12.0),
           child: Column(
             children: [
-              // Title + Location + Rating
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -187,8 +309,6 @@ class _TourCardsState extends State<TourCards> {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Difficulty and Duration
               Row(
                 children: [
                   Container(
@@ -199,7 +319,7 @@ class _TourCardsState extends State<TourCards> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      tour.difficulty,
+                      difficulty,
                       style: const TextStyle(
                           color: Color(0xFF723594), fontSize: 13),
                     ),
@@ -218,13 +338,16 @@ class _TourCardsState extends State<TourCards> {
               ),
               const SizedBox(height: 12),
               const Divider(),
-
-              // Guide Info
               Row(
                 children: [
                   CircleAvatar(
                     radius: 16,
-                    backgroundImage: NetworkImage(tour.guideImage),
+                    backgroundImage: (tour.guideImage.isNotEmpty)
+                        ? NetworkImage(tour.guideImage)
+                        : null,
+                    child: tour.guideImage.isEmpty
+                        ? const Icon(Icons.person, size: 16)
+                        : null,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -242,7 +365,7 @@ class _TourCardsState extends State<TourCards> {
                   TextButton(
                     onPressed: () {
                       Navigator.pushNamed(context, AppRoutes.ridePage,
-                      arguments: tour.id);
+                          arguments: tour.id);
                     },
                     child: const Text(
                       "View Details",

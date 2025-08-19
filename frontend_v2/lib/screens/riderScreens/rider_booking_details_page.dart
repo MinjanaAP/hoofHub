@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/constant/api_constants.dart';
-import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/screens/skeletons/custom_loading_page.dart';
 import 'package:frontend/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -89,15 +89,15 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange;
-      case 'confirmed':
+     case 'pending':
+        return const Color.fromARGB(255, 147, 111, 53);
       case 'accepted':
       case 'completed':
-        return Colors.green;
+        return const Color.fromARGB(255, 53, 87, 147);
+      case 'confirmed':
+        return const Color.fromARGB(255, 53, 147, 59);
       case 'rejected':
-      case 'cancelled':
-        return Colors.red;
+        return const Color.fromARGB(255, 147, 59, 53);
       default:
         return Colors.grey;
     }
@@ -111,7 +111,7 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
         showBackButton: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const CustomLoadingScreen()
           : _errorMessage.isNotEmpty
               ? Center(child: Text(_errorMessage))
               : _bookingData == null
@@ -243,10 +243,12 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+      style: const TextStyle(
+            fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
+            fontFamily: 'Poppins',
+            color: Color.fromARGB(255, 55, 3, 83)
+          ), 
     );
   }
 
@@ -648,7 +650,12 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text('CONTACT GUIDE'),
+            child: const Text('CONTACT GUIDE',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ],
