@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/common/foreground_alert.dart';
 import 'package:frontend/providers/booking_provider.dart';
-import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/BookingScreens/booking_header.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:lottie/lottie.dart';

@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/screens/skeletons/custom_loading_page.dart';
+import 'package:frontend/services/stripe_services.dart';
 import 'package:frontend/theme.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
@@ -13,14 +15,17 @@ class RiderBookingDetailsPage extends StatefulWidget {
   const RiderBookingDetailsPage({super.key, required this.bookingId});
 
   @override
-  State<RiderBookingDetailsPage> createState() => _RiderBookingDetailsPageState();
+  State<RiderBookingDetailsPage> createState() =>
+      _RiderBookingDetailsPageState();
 }
 
 class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   late Future<Map<String, dynamic>> _bookingDetails;
+  User? user = FirebaseAuth.instance.currentUser;
   bool _isLoading = true;
   Map<String, dynamic>? _bookingData;
   String _errorMessage = '';
+  late Map<String, dynamic> rideDetails;
 
   @override
   void initState() {
@@ -31,7 +36,8 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   Future<Map<String, dynamic>> _fetchBookingDetails() async {
     try {
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}/bookings/${widget.bookingId}/details'),
+        Uri.parse(
+            '${ApiConstants.baseUrl}/bookings/${widget.bookingId}/details'),
       );
       // logger.e('Booking details response: ${response.body}');
       if (response.statusCode == 200) {
@@ -44,7 +50,8 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
       } else {
         setState(() {
           _isLoading = false;
-          _errorMessage = 'Failed to load booking details. Status code: ${response.statusCode}';
+          _errorMessage =
+              'Failed to load booking details. Status code: ${response.statusCode}';
         });
         throw Exception('Failed to load booking details');
       }
@@ -89,7 +96,7 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
-     case 'pending':
+      case 'pending':
         return const Color.fromARGB(255, 147, 111, 53);
       case 'accepted':
       case 'completed':
@@ -116,12 +123,31 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               ? Center(child: Text(_errorMessage))
               : _bookingData == null
                   ? const Center(child: Text('No booking data available'))
-                  : _buildBookingDetailsContent(),
+                  : Stack(
+                      children: [
+                        _buildBookingDetailsContent(),
+                        // Floating payment button positioned at the bottom
+                        if (_shouldShowPaymentButton())
+                          Positioned(
+                            bottom: 20,
+                            left: 16,
+                            right: 16,
+                            child: _buildPaymentButton(context),
+                          ),
+                      ],
+                    ),
     );
+  }
+
+  bool _shouldShowPaymentButton() {
+
+    final status = _bookingData?['status']?.toString().toLowerCase() ?? '';
+    return status == 'confirmed' || status == 'paid';
   }
 
   Widget _buildBookingDetailsContent() {
     final ride = _bookingData!['ride'] as Map<String, dynamic>;
+    rideDetails = ride;
     final guide = _bookingData!['guide'] as Map<String, dynamic>;
     final rider = _bookingData!['rider'] as Map<String, dynamic>;
     final status = (_bookingData!['status'] as String).toUpperCase();
@@ -138,31 +164,31 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
           // Booking status card
           _buildStatusCard(context, status, date, time, rejectionReason),
           const SizedBox(height: 24),
-          
+
           // Ride details section
           _buildSectionHeader('Ride Information'),
           const SizedBox(height: 12),
           _buildRideDetailsCard(ride),
           const SizedBox(height: 24),
-          
+
           // Booking details section
           _buildSectionHeader('Booking Details'),
           const SizedBox(height: 12),
           _buildBookingDetailsCard(),
           const SizedBox(height: 24),
-          
+
           // Guide details section
           _buildSectionHeader('Your Guide'),
           const SizedBox(height: 12),
           _buildGuideCard(guide),
           const SizedBox(height: 24),
-          
+
           // Rider details section
           _buildSectionHeader('Your Information'),
           const SizedBox(height: 12),
           _buildRiderCard(rider),
           const SizedBox(height: 24),
-          
+
           // Cancellation policy
           if (ride['cancelPolicy'] != null) ...[
             _buildSectionHeader('Cancellation Policy'),
@@ -170,17 +196,21 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
             _buildPolicyCard(ride['cancelPolicy'] as String),
             const SizedBox(height: 24),
           ],
-          
+
           // Action buttons
           if (_bookingData!['status'].toString().toLowerCase() == 'pending' ||
               _bookingData!['status'].toString().toLowerCase() == 'confirmed')
             _buildActionButtons(context),
+
+          // Add extra padding at the bottom to account for the floating button
+          const SizedBox(height: 80),
         ],
       ),
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, String status, String date, String time, String? rejectionReason) {
+  Widget _buildStatusCard(BuildContext context, String status, String date,
+      String time, String? rejectionReason) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -214,18 +244,19 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                   color: getStatusColor(status),
                 ),
               ),
-              
             ],
           ),
           const SizedBox(height: 8),
-              Text(
-                '$date • $time',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade700,
-                    ),
-              ),
+          Text(
+            '$date • $time',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey.shade700,
+                ),
+          ),
           const SizedBox(height: 8),
-          if (rejectionReason != null && rejectionReason.isNotEmpty && status.toLowerCase() == 'rejected')
+          if (rejectionReason != null &&
+              rejectionReason.isNotEmpty &&
+              status.toLowerCase() == 'rejected')
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
@@ -244,11 +275,10 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
     return Text(
       title,
       style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-            color: Color.fromARGB(255, 55, 3, 83)
-          ), 
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          fontFamily: 'Poppins',
+          color: Color.fromARGB(255, 55, 3, 83)),
     );
   }
 
@@ -282,7 +312,8 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                       width: 80,
                       height: 80,
                       color: Colors.grey[200],
-                      child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                      child: const Icon(Icons.image_not_supported,
+                          color: Colors.grey),
                     ),
                   ),
                 ),
@@ -293,17 +324,19 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                     children: [
                       Text(
                         ride['title'],
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'LKR ${ride['price']}',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.primary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primary,
+                                ),
                       ),
                     ],
                   ),
@@ -311,7 +344,7 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Ride details in grid
             GridView.count(
               crossAxisCount: 2,
@@ -321,23 +354,26 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               crossAxisSpacing: 8,
               mainAxisSpacing: 8,
               children: [
-                _buildDetailItem(Icons.location_on, 'Location', ride['location']),
+                _buildDetailItem(
+                    Icons.location_on, 'Location', ride['location']),
                 _buildDetailItem(Icons.timer, 'Duration', ride['duration']),
                 _buildDetailItem(Icons.landscape, 'Distance', ride['distance']),
-                _buildDetailItem(Icons.people, 'Max Riders', ride['maxParticipants'].toString()),
+                _buildDetailItem(Icons.people, 'Max Riders',
+                    ride['maxParticipants'].toString()),
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // Description
             Text(
               ride['description'],
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 16),
-            
+
             // What's included
-            if (ride['includes'] != null && (ride['includes'] as List).isNotEmpty) ...[
+            if (ride['includes'] != null &&
+                (ride['includes'] as List).isNotEmpty) ...[
               Text(
                 'What\'s Included:',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -366,38 +402,39 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
     );
   }
 
- Widget _buildDetailItem(IconData icon, String label, String value) {
-  return Row(
-    children: [
-      Icon(icon, size: 20, color: AppColors.primary),
-      const SizedBox(width: 8),
-      Expanded( // Add Expanded to constrain the text width
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey,
-                  ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis, 
-            ),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-              maxLines: 1, 
-              overflow: TextOverflow.ellipsis, 
-            ),
-          ],
+  Widget _buildDetailItem(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Expanded(
+          // Add Expanded to constrain the text width
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildBookingDetailsCard() {
     return Card(
@@ -416,13 +453,15 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
           children: [
             _buildBookingDetailRow('Booking ID', _bookingData!['id']),
             const Divider(),
-            _buildBookingDetailRow('Booking Date', 
-                DateFormat('MMM dd, yyyy - hh:mm a').format(DateTime.parse(_bookingData!['createdAt']))),
+            _buildBookingDetailRow(
+                'Booking Date',
+                DateFormat('MMM dd, yyyy - hh:mm a')
+                    .format(DateTime.parse(_bookingData!['createdAt']))),
             const Divider(),
-            _buildBookingDetailRow('Ride Type', 
+            _buildBookingDetailRow('Ride Type',
                 '${_bookingData!['rideType'][0].toUpperCase()}${_bookingData!['rideType'].toString().substring(1)}'),
             const Divider(),
-            _buildBookingDetailRow('Status', 
+            _buildBookingDetailRow('Status',
                 '${_bookingData!['status'][0].toUpperCase()}${_bookingData!['status'].toString().substring(1)}'),
           ],
         ),
@@ -475,10 +514,12 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundImage: guide['profileImage'] != null && guide['profileImage'].toString().isNotEmpty
+                  backgroundImage: guide['profileImage'] != null &&
+                          guide['profileImage'].toString().isNotEmpty
                       ? NetworkImage(guide['profileImage'] as String)
                       : null,
-                  child: guide['profileImage'] == null || guide['profileImage'].toString().isEmpty
+                  child: guide['profileImage'] == null ||
+                          guide['profileImage'].toString().isEmpty
                       ? const Icon(Icons.person, size: 30)
                       : null,
                 ),
@@ -489,9 +530,10 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                     children: [
                       Text(
                         guide['fullName'] as String? ?? 'Unknown Guide',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       Text(
                         guide['experience'] as String? ?? 'Experienced Guide',
@@ -500,6 +542,24 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                             ),
                       ),
                     ],
+                  ),
+                ),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // TODO: Handle contact guide
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: const Text(
+                      'Contact Guide',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -515,7 +575,8 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
               children: [
                 _buildDetailItem(Icons.phone, 'Contact', guide['mobileNumber']),
                 _buildDetailItem(Icons.email, 'Email', guide['email']),
-                _buildDetailItem(Icons.translate, 'Languages', guide['languages']),
+                _buildDetailItem(
+                    Icons.translate, 'Languages', guide['languages']),
                 _buildDetailItem(Icons.work, 'Experience', guide['experience']),
               ],
             ),
@@ -558,9 +619,10 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                     children: [
                       Text(
                         rider['name'] as String? ?? 'Unknown Rider',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       Text(
                         'Rider',
@@ -641,24 +703,59 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
           ),
         if (_bookingData!['status'].toString().toLowerCase() == 'pending')
           const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () {
-              // TODO: Handle contact guide
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: const Text('CONTACT GUIDE',
+      ],
+    );
+  }
+
+  Widget _buildPaymentButton(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: () async {
+          try {
+            await StripeServices.instance.makePayment(
+              amount: rideDetails['price'] as int,
+              bookingId: widget.bookingId,
+              userId: user?.uid ?? '',
+              context: context
+            );
+          } catch (e) {
+            print("Payment failed: $e");
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 227, 64, 19),
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          elevation: 0,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.payment, size: 24, color: Colors.white),
+            SizedBox(width: 12),
+            Text(
+              "Continue to Payment",
               style: TextStyle(
+                fontSize: 16,
                 color: Colors.white,
-                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

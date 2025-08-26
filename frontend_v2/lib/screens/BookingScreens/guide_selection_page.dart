@@ -62,7 +62,6 @@ class _GuideSelectionPageState extends State<GuideSelectionPage> {
 
   @override
   Widget build(BuildContext context) {
-    final User? user = FirebaseAuth.instance.currentUser;
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: const CustomAppBar(title: "hoofHub", showBackButton: true),

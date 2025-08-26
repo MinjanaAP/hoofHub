@@ -12,6 +12,8 @@ class BookingService {
         'status': status,
         if (status == 'rejected' && rejectionReason != null)
           'rejectionReason': rejectionReason,
+        if(status == 'confirmed')
+          'paymentStatus' :'pending' ,
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
