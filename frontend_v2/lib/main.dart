@@ -4,7 +4,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:device_preview/device_preview.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:frontend/common/foreground_alert.dart';
+import 'package:frontend/constant/stripe_constants.dart';
 import 'package:provider/provider.dart';
 
 import 'firebase_options.dart';
@@ -13,10 +15,8 @@ import 'package:frontend/models/guide_model.dart';
 import 'package:frontend/providers/booking_provider.dart';
 import 'package:frontend/providers/auth_provider.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:frontend/screens/BookingScreens/all_rides_page.dart';
 import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/home_screen.dart';
-import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/select_profile.dart';
 import 'package:frontend/screens/splash_screen.dart';
 
@@ -56,7 +56,7 @@ void showForegroundDialog(String? title, String? body) {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  _stripeSetup();
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -169,4 +169,9 @@ class _AuthCheckState extends State<AuthCheck> {
   Widget build(BuildContext context) {
     return const SplashScreen();
   }
+}
+
+Future<void> _stripeSetup() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = stripePublishableKey;
 }

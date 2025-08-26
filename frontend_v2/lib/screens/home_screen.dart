@@ -10,6 +10,7 @@ import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:frontend/services/ride_service.dart';
+import 'package:frontend/services/stripe_services.dart';
 import 'package:frontend/theme.dart';
 import 'package:logger/logger.dart';
 import '../services/api_service.dart';
@@ -482,80 +483,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader("Quick Actions", Icons.flash_on),
-        const SizedBox(height: 12),
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 2.5,
-          children: [
-            _buildQuickActionButton(
-              icon: Icons.location_on,
-              label: "Nearby Rides",
-              color: Colors.blue,
-            ),
-            _buildQuickActionButton(
-              icon: Icons.calendar_today,
-              label: "Book Later",
-              color: Colors.green,
-            ),
-            _buildQuickActionButton(
-              icon: Icons.favorite,
-              label: "Favorites",
-              color: Colors.red,
-            ),
-            _buildQuickActionButton(
-              icon: Icons.history,
-              label: "Ride History",
-              color: Colors.orange,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuickActionButton({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        foregroundColor: color,
-        backgroundColor: color.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        elevation: 0,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-      onPressed: () {
-        // Handle button press
-      },
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -376,23 +376,23 @@ class _RiderSignUpState extends State<RiderSignUp> {
   }
 }
 
-void _showAlert(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text("Signup Successful"),
-        content: const Text(
-            "You have successfully signed up. Please log in to continue."),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: const Text("OK"),
-          ),
-        ],
-      );
-    },
-  );
-}
+// void _showAlert(BuildContext context) {
+//   showDialog(
+//     context: context,
+//     builder: (BuildContext context) {
+//       return AlertDialog(
+//         title: const Text("Signup Successful"),
+//         content: const Text(
+//             "You have successfully signed up. Please log in to continue."),
+//         actions: [
+//           TextButton(
+//             onPressed: () {
+//               Navigator.of(context).pop();
+//             },
+//             child: const Text("OK"),
+//           ),
+//         ],
+//       );
+//     },
+//   );
+// }

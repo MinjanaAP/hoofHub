@@ -21,7 +21,15 @@ guide signup is ok, with profile images and horse images.
 # todo : create guide home pages
 # todo : create rides in admin
 
-# 08/21
+# 08/19
 # Done : feat(api/ui) : add google login & forgot password fn
 >> - complete the home page widgets.
 >> - add about us page."
+
+
+# 08/20
+# Done : feat(ui) : Add my booking page to fetch all user bookings.
+- categorized the bookings based on status confirmed,pending,compklete,reject.
+- booking details page to display all details of the booking.
+- enhanced the tour select page to search and set filters in tours.
+- change rider profile image with smaple avatar.

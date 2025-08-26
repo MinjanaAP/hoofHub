@@ -101,7 +101,8 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
           // Categorize bookings
           final confirmedBookings = docs.where((doc) {
             final data = doc.data() as Map<String, dynamic>;
-            return (data['status'] as String).toLowerCase() == 'confirmed';
+            return (data['status'] as String).toLowerCase() == 'confirmed' ||
+                (data['status'] as String).toLowerCase() == 'paid';
           }).toList();
 
           final pendingBookings = docs.where((doc) {
