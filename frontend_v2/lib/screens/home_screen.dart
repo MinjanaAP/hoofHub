@@ -1,0 +1,605 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:frontend/common/bottom_nav_bar.dart';
+import 'package:frontend/common/greetin_card.dart';
+import 'package:frontend/common/home_appbar.dart';
+import 'package:frontend/common/home_carousel.dart';
+import 'package:frontend/common/home_content.dart';
+import 'package:frontend/common/home_search_bar.dart';
+import 'package:frontend/common/rider_Components/ongoing_ride_detector.dart';
+import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
+import 'package:frontend/services/auth_service.dart';
+import 'package:frontend/services/ride_service.dart';
+import 'package:frontend/services/stripe_services.dart';
+import 'package:frontend/theme.dart';
+import 'package:logger/logger.dart';
+import '../services/api_service.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+final logger = Logger();
+
+class _HomeScreenState extends State<HomeScreen> {
+  String message = "Fetching data...";
+  final User? user = FirebaseAuth.instance.currentUser;
+  final ScrollController _scrollController = ScrollController();
+  late Future<List> popularRides;
+
+  DocumentSnapshot<Map<String, dynamic>>? ongoingRide;
+  bool isLoadingRide = true;
+
+  @override
+  void initState() {
+    super.initState();
+    fetchData();
+    popularRides = RideService().getPopularRides();
+
+    final user = FirebaseAuth.instance.currentUser;
+    const role = "rider";
+
+    if (user != null) {
+      AuthService().setupFCM(user.uid, role);
+      fetchOngoingRide(user.uid).then((doc) {
+        setState(() {
+          ongoingRide = doc;
+          isLoadingRide = false;
+        });
+      });
+    } else {
+      isLoadingRide = false;
+    }
+  }
+
+  Future<void> fetchData() async {
+    final data = await ApiService.getData();
+    if (mounted) {
+      setState(() {
+        message = data ?? "Failed to fetch data";
+      });
+    }
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> fetchOngoingRide(
+      String uid) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('bookings')
+        .where('uid', isEqualTo: uid)
+        .where('rideStatus', isEqualTo: 'started')
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first;
+    }
+    return null;
+  }
+
+  Future<void> logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, AppRoutes.selectProfile);
+      }
+    } catch (e) {
+      logger.e("Logout Error : $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Logout failed: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: true,
+      appBar: const HomeAppBar(),
+      drawer: _buildDrawer(context),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await fetchData();
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  const GreetingCard(),
+                  const SizedBox(height: 16),
+                  HomeSearchBar(),
+                  const SizedBox(height: 16),
+                  if (isLoadingRide)
+                    const SizedBox.shrink()
+                  else if (ongoingRide != null)
+                    OngoingRideDetector(
+                      ongoingRide: ongoingRide!,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.ongoingRidePage,
+                          arguments: {"bookingId": ongoingRide!.id},
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 16),
+                  HomeCarousel(),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _buildBookRideCard(),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader("Most Popular Rides", Icons.star),
+                  const SizedBox(height: 12),
+                  // _buildPopularRidesList(),
+                  FutureBuilder<List>(
+                    future: popularRides,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        // return const Center(child: CircularProgressIndicator());
+                        return const RideCardSkeleton();
+                      } else if (snapshot.hasError) {
+                        return Center(child: Text("Error: ${snapshot.error}"));
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                            child: Text("No popular rides found."));
+                      }
+
+                      return buildPopularRidesList(snapshot.data!);
+                    },
+                  ),
+                  // buildPopularRidesList(popularRides),
+                  const SizedBox(height: 24),
+                  _buildSectionHeader("Your Previous Rides", Icons.history),
+                  const SizedBox(height: 12),
+                  _buildPreviousRidesList(),
+                  const SizedBox(height: 24),
+                  // _buildQuickActions(),
+                  // const SizedBox(height: 24),
+                  const HomeContent(),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: const BottomNavBar(
+        selectedIndex: 0,
+      ),
+    );
+  }
+
+  Widget _ongoingDetector() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.ongoingRidePage,
+          arguments: {"bookingId": ongoingRide!.id},
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF81C784)], // green gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.directions_run,
+                color: Colors.green,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "🚀 Ongoing Ride",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    ongoingRide!['rideId'] ?? "Ride in progress",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Colors.white,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      width: MediaQuery.of(context).size.width * 0.75,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          UserAccountsDrawerHeader(
+            accountName: Text(
+              user?.displayName ?? "Guest",
+              style: const TextStyle(fontSize: 18),
+            ),
+            accountEmail: Text(
+              user?.email ?? "Not signed in",
+              style: const TextStyle(fontSize: 14),
+            ),
+            currentAccountPicture: CircleAvatar(
+              radius: 30,
+              backgroundImage: user?.photoURL != null
+                  ? NetworkImage(user!.photoURL!)
+                  : const AssetImage('assets/images/profilePic.jpg')
+                      as ImageProvider,
+            ),
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home, color: AppColors.primary),
+            title: const Text('Home'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.person, color: AppColors.primary),
+            title: const Text('My Profile'),
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.riderProfile);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.favorite, color: AppColors.primary),
+            title: const Text('Favorites'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.settings, color: AppColors.primary),
+            title: const Text('Settings'),
+            onTap: () {
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text('Logout', style: TextStyle(color: Colors.red)),
+            onTap: () => logout(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        // Icon(icon, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Color.fromARGB(255, 55, 3, 83)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBookRideCard() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(50),
+      onTap: () {
+        Navigator.pushNamed(context, AppRoutes.bookingType);
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.primary.withOpacity(0.8),
+              AppColors.primary.withOpacity(0.6),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(50),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.purple.withOpacity(0.2),
+              blurRadius: 10,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              child: const Icon(Icons.directions, color: AppColors.primary),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      "UP TO 12% OFF",
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Book a ride now",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "100+ horses available",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.white.withOpacity(0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildPopularRidesList(List<dynamic> popularRides) {
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: popularRides.length,
+        itemBuilder: (context, index) {
+          final ride = popularRides[index];
+          return Container(
+            width: 180,
+            margin: EdgeInsets.only(
+                right: index == popularRides.length - 1 ? 0 : 16),
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 4,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () {
+                  Navigator.pushNamed(context, AppRoutes.ridePage,
+                      arguments: ride['id']);
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ClipRRect(
+                      borderRadius:
+                          const BorderRadius.vertical(top: Radius.circular(12)),
+                      child: Image.network(
+                        ride['images'][0],
+                        width: double.infinity,
+                        height: 100,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.broken_image),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ride['title'],
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            ride['location'],
+                            style: TextStyle(
+                                color: Colors.grey[600], fontSize: 12),
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  const Icon(Icons.star,
+                                      color: Colors.amber, size: 16),
+                                  Text(
+                                    ride['rating'].toString(),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                "Rs. ${ride['price']}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.green,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildPreviousRidesList() {
+    final previousRides = [
+      {
+        "name": "ZRI Adventures",
+        "location": "Nuwara Eliya",
+        "date": "14 Feb",
+        "image": "assets/images/horse-1.jpg",
+      },
+      {
+        "name": "Makara Resorts Horse Rides",
+        "location": "Nuwara Eliya",
+        "date": "28 Jan",
+        "image": "assets/images/horse-1.jpg",
+      },
+    ];
+
+    return Column(
+      children: previousRides.map((ride) {
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              // Navigate to ride details
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.asset(
+                      ride["image"]!,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          ride["name"]!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          ride["location"]!,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                        ride["date"]!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Icon(Icons.chevron_right, color: Colors.grey),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}

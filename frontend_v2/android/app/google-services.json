@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "239056007523",
+    "project_id": "hoofhub-4f4a7",
+    "storage_bucket": "hoofhub-4f4a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239056007523:android:b412c3913f2cfe84d72356",
+        "android_client_info": {
+          "package_name": "com.example.frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239056007523-opf5tb6s37jhj6sjqu8b6if9jal0nhvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC7KGnkrP5BNY9Ik-Drl7l8wfjf7m28wxI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239056007523-opf5tb6s37jhj6sjqu8b6if9jal0nhvl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "239056007523-cpv07qk1c2a65jk2p72oqt0vk4eqqe86.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.frontend"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
