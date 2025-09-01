@@ -18,7 +18,9 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase-admin": "^13.1.0",
+    "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.1",
+    "qrcode": "^1.5.4",
     "streamifier": "^0.1.1",
     "stripe": "^18.4.0"
   },

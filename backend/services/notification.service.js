@@ -46,3 +46,28 @@ export const sendPaymentNotificationService = async ({
         throw error;
     }
 };
+
+export const sendNotificationToUserByRole = async (userId, role, title, body, data, route) => {
+    try {
+        const userDoc = await db.collection(role + "s").doc(userId).get();
+        if (!userDoc.exists) throw new Error(role + " not found");
+        const userData = userDoc.data();
+        const fcmToken = userData?.fcmToken;
+        console.log(
+            `Sending notification to ${role} (ID: ${userId}) with token: ${fcmToken} ${title} - ${body}-${JSON.stringify(data)}`
+        );
+        // const route = '/riderStartingRidePage'
+        if (fcmToken) {
+            const result = await sendNotification(
+                fcmToken,
+                title,
+                body,
+                { ...data, userId, role, route }
+            );
+            return result;
+        }
+    } catch (error) {
+        console.error("Error in send notifications to user by role:", error);
+        throw error;
+    }
+}
