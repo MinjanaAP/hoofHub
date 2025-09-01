@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
@@ -6,6 +7,7 @@ import 'package:frontend/common/home_appbar.dart';
 import 'package:frontend/common/home_carousel.dart';
 import 'package:frontend/common/home_content.dart';
 import 'package:frontend/common/home_search_bar.dart';
+import 'package:frontend/common/rider_Components/ongoing_ride_detector.dart';
 import 'package:frontend/routes/app_routes.dart';
 import 'package:frontend/screens/skeletons/ride_card_skeleton.dart';
 import 'package:frontend/services/auth_service.dart';
@@ -30,6 +32,9 @@ class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   late Future<List> popularRides;
 
+  DocumentSnapshot<Map<String, dynamic>>? ongoingRide;
+  bool isLoadingRide = true;
+
   @override
   void initState() {
     super.initState();
@@ -37,12 +42,19 @@ class _HomeScreenState extends State<HomeScreen> {
     popularRides = RideService().getPopularRides();
 
     final user = FirebaseAuth.instance.currentUser;
-    const role = "rider"; 
+    const role = "rider";
 
     if (user != null) {
       AuthService().setupFCM(user.uid, role);
+      fetchOngoingRide(user.uid).then((doc) {
+        setState(() {
+          ongoingRide = doc;
+          isLoadingRide = false;
+        });
+      });
+    } else {
+      isLoadingRide = false;
     }
-    
   }
 
   Future<void> fetchData() async {
@@ -52,6 +64,21 @@ class _HomeScreenState extends State<HomeScreen> {
         message = data ?? "Failed to fetch data";
       });
     }
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> fetchOngoingRide(
+      String uid) async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection('bookings')
+        .where('uid', isEqualTo: uid)
+        .where('rideStatus', isEqualTo: 'started')
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isNotEmpty) {
+      return snapshot.docs.first;
+    }
+    return null;
   }
 
   Future<void> logout(BuildContext context) async {
@@ -90,6 +117,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 16),
                   HomeSearchBar(),
                   const SizedBox(height: 16),
+                  if (isLoadingRide)
+                    const SizedBox.shrink()
+                  else if (ongoingRide != null)
+                    OngoingRideDetector(
+                      ongoingRide: ongoingRide!,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          AppRoutes.ongoingRidePage,
+                          arguments: {"bookingId": ongoingRide!.id},
+                        );
+                      },
+                    ),
+                  const SizedBox(height: 16),
                   HomeCarousel(),
                   const SizedBox(height: 24),
                 ],
@@ -116,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return const Center(
                             child: Text("No popular rides found."));
                       }
-        
+
                       return buildPopularRidesList(snapshot.data!);
                     },
                   ),
@@ -135,7 +176,84 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 0,),
+      bottomNavigationBar: const BottomNavBar(
+        selectedIndex: 0,
+      ),
+    );
+  }
+
+  Widget _ongoingDetector() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(
+          context,
+          AppRoutes.ongoingRidePage,
+          arguments: {"bookingId": ongoingRide!.id},
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4CAF50), Color(0xFF81C784)], // green gradient
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.green.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.directions_run,
+                color: Colors.green,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "🚀 Ongoing Ride",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Text(
+                    ongoingRide!['rideId'] ?? "Ride in progress",
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white70,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Colors.white,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -212,11 +330,10 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           title,
           style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Poppins',
-            color: Color.fromARGB(255, 55, 3, 83)
-          ),
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Poppins',
+              color: Color.fromARGB(255, 55, 3, 83)),
         ),
       ],
     );

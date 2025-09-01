@@ -74,12 +74,12 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
         title: "My Bookings",
         showBackButton: true,
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
+      body: FutureBuilder<QuerySnapshot>(
+        future: FirebaseFirestore.instance
             .collection('bookings')
             .where('uid', isEqualTo: uid)
             .orderBy('selectedDate', descending: false)
-            .snapshots(),
+            .get(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -214,6 +214,8 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
     final selectedTime = formatTime(bookingData['selectedTime'] as String);
     final rideType = bookingData['rideType'] as String? ?? 'single';
     final rejectionReason = bookingData['rejectionReason'] as String?;
+    final paymentStatus = bookingData['paymentStatus'] as String? ?? 'unpaid';
+    final isPaid = paymentStatus.toLowerCase() == 'paid';
 
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('rides').doc(rideId).get(),
@@ -248,7 +250,7 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header with status
+              // Header with status and payment badge
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -350,6 +352,37 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
                                       color: Colors.grey.shade600,
                                     ),
                               ),
+                              const SizedBox(height: 4),
+                              // Payment status badge
+                              if (isPaid)
+                                Container(
+                                  width: 70,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                        color: Colors.green.shade300,
+                                        width: 1),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.check_circle,
+                                          color: Color.fromARGB(255, 67, 160, 71),
+                                          size: 18),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'Paid',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color.fromARGB(255, 56, 142, 60),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -445,6 +478,10 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 child: Row(
                   children: [
+                    if (!isPaid &&
+                        (bookingData['status'] as String).toLowerCase() ==
+                            'confirmed')
+                      const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () {
@@ -466,6 +503,31 @@ class _RiderBookingsPageState extends State<RiderBookingsPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
+                    if (!isPaid &&
+                        (bookingData['status'] as String).toLowerCase() ==
+                            'confirmed')
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            logger.d(bookingId);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => RiderBookingDetailsPage(
+                                  bookingId: bookingId,
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 227, 64, 19),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: const Text('PAY NOW'),
+                        ),
+                      ),
                     if ((bookingData['status'] as String).toLowerCase() ==
                         'pending')
                       Expanded(

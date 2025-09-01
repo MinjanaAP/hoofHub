@@ -3,11 +3,14 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/bottom_nav_bar.dart';
+import 'package:frontend/common/guide_components/guide_bottom_nav_bar.dart';
 import 'package:frontend/common/guide_components/upcoming_bookings.dart';
 import 'package:frontend/common/home_appbar.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/models/ride_model.dart';
 import 'package:frontend/routes/app_routes.dart';
+import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/screens/horseScreens/horse_details_page.dart';
 import 'package:frontend/services/api_service.dart';
 import 'package:frontend/services/auth_service.dart';
 import 'package:http/http.dart' as http;
@@ -38,7 +41,7 @@ class _GuideHomeState extends State<GuideHome> {
     fetchRides();
 
     final user = FirebaseAuth.instance.currentUser;
-    const role = "guide"; 
+    const role = "guide";
 
     if (user != null) {
       AuthService().setupFCM(user.uid, role);
@@ -50,11 +53,18 @@ class _GuideHomeState extends State<GuideHome> {
     if (user == null) return;
 
     try {
-      final response = await ApiService.getGuideById(user!.uid);
+      final response = await ApiService.getGuideById(user.uid);
       setState(() {
         guideName = response['fullName'] ?? 'Guide';
         guideImage = response['profileImage'] ?? '';
-        horses = [Horse.fromJson(response['horse'])];
+        
+        // Handle horse data - it's a single horse object, not a list
+        if (response['horse'] != null && response['horse'] is Map<String, dynamic>) {
+          horses = [Horse.fromJson(response['horse'])];
+        } else {
+          horses = [];
+        }
+        
         isLoading = false;
       });
     } catch (e) {
@@ -112,7 +122,12 @@ class _GuideHomeState extends State<GuideHome> {
   }
 
   void navigateToHorseDetail(BuildContext context, Horse horse) {
-    Navigator.pushNamed(context, AppRoutes.horseDetails, arguments: horse);
+    logger.d("Navigating to Horse Detail: ${horse.id}");
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+          builder: (context) => HorseDetailPage(horseId: horse.id)),
+    );
   }
 
   @override
@@ -134,28 +149,27 @@ class _GuideHomeState extends State<GuideHome> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildHeaderSection(),
+                        _buildHeaderSection(context),
                         const SizedBox(height: 16),
                         _buildStatsSection(),
                         const SizedBox(height: 24),
                         _buildHorsesSection(context),
                         const SizedBox(height: 24),
-                        // For UpcomingBookingsWidget - give it a fixed height
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(
-                            'Upcoming Bookings',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        SizedBox(
-                          height: 600, // Adjust based on your needs
-                          child: UpcomingBookingsWidget(
-                            guideId: guide!.uid,
-                            primaryColor: primaryColor,
-                          ),
-                        ),
+                        // const Padding(
+                        //   padding: EdgeInsets.symmetric(horizontal: 24),
+                        //   child: Text(
+                        //     'Upcoming Bookings',
+                        //     style: TextStyle(
+                        //         fontSize: 18, fontWeight: FontWeight.bold),
+                        //   ),
+                        // ),
+                        // SizedBox(
+                        //   height: 600,
+                        //   child: UpcomingBookingsWidget(
+                        //     guideId: guide!.uid,
+                        //     primaryColor: primaryColor,
+                        //   ),
+                        // ),
                         const SizedBox(height: 24),
                         _buildRideAreasSection(context),
                         const SizedBox(height: 40),
@@ -165,7 +179,7 @@ class _GuideHomeState extends State<GuideHome> {
                 );
               },
             ),
-      bottomNavigationBar: const BottomNavBar(),
+      bottomNavigationBar: const GuideBottomNavBar(),
     );
   }
 
@@ -222,12 +236,12 @@ class _GuideHomeState extends State<GuideHome> {
     );
   }
 
-  Widget _buildHeaderSection() {
+  Widget _buildHeaderSection(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(24, 48, 24, 32),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [primaryColor, Color(0xFF8f4ab8)],
+          colors: [primaryColor, const Color(0xFF8f4ab8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -270,30 +284,80 @@ class _GuideHomeState extends State<GuideHome> {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
   }
 
   Widget _buildStatsSection() {
-    return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
         children: [
-          Expanded(
-              child: _StatCard(
-            icon: Icons.calendar_today,
-            label: "Today's Rides",
-            value: '3',
-          )),
-          SizedBox(width: 16),
-          Expanded(
-              child: _StatCard(
-            icon: Icons.star,
-            label: "Rating",
-            value: '4.8',
-          )),
+          const Row(
+            children: [
+              Expanded(
+                  child: _StatCard(
+                icon: Icons.calendar_today,
+                label: "Today's Rides",
+                value: '3',
+              )),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: _StatCard(
+                icon: Icons.star,
+                label: "Rating",
+                value: '4.8',
+              )),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // QR Scan Button Card
+          GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, AppRoutes.scanQRPage);
+            },
+            child: Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.qr_code_scanner,
+                        color: Color(0xFF723594), size: 28),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Scan Rider QR',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Start a ride quickly',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -402,25 +466,31 @@ class Horse {
   final String id;
   final String name;
   final String breed;
+  final String age;
+  final String color;
   final String experience;
-  final String image;
+  final List<String> images;
 
   Horse({
     required this.id,
     required this.name,
     required this.breed,
+    required this.age,
+    required this.color,
     required this.experience,
-    required this.image,
-  });
+    List<String>? images, // Make it optional in constructor
+  }) : images = images ?? []; // Provide default empty list
 
   factory Horse.fromJson(Map<String, dynamic> json) {
-    final List<dynamic>? images = json['images'];
+    final List<dynamic> imagesList = json['images'] ?? [];
     return Horse(
-      id: json['_id'] ?? '',
+      id: json['id'] ?? json['_id'] ?? '',
       name: json['name'] ?? 'Unnamed',
       breed: json['breed'] ?? 'Unknown',
+      age: json['age']?.toString() ?? 'N/A',
+      color: json['color'] ?? 'Unknown',
       experience: json['specialNotes'] ?? 'N/A',
-      image: (images != null && images.isNotEmpty) ? images[0] : '',
+      images: imagesList.map((image) => image.toString()).toList(),
     );
   }
 }
@@ -490,9 +560,9 @@ class _HorseCard extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: horse.image.isNotEmpty
+              child: horse.images.isNotEmpty
                   ? Image.network(
-                      horse.image,
+                      horse.images[0],
                       width: 64,
                       height: 64,
                       fit: BoxFit.cover,
@@ -532,10 +602,10 @@ class _HorseCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    horse.experience,
+                    'Age: ${horse.age} | Color: ${horse.color}',
                     style: TextStyle(
                       color: Colors.grey[600],
-                      fontSize: 14,
+                      fontSize: 12,
                     ),
                   ),
                 ],
