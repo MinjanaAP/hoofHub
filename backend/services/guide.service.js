@@ -55,7 +55,11 @@ const getGuideById = async (uid) => {
 
     const guide = doc.data();
     const horse = await db.collection("horses").doc(guide.horseId).get();
-    return { id: doc.id, ...guide, horse: horse.exists ? horse.data() : null };
+    const horseData = {
+        id: horse.id,
+        ...horse.data()
+    }
+    return { id: doc.id, ...guide, horse: horse.exists ? horseData : null };
 };
 
 const getAllGuides = async () => {

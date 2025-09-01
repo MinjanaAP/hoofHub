@@ -14,6 +14,7 @@ import horseRoutes from './routes/horse.routes.js';
 import bookingRoutes from './routes/booking.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import notificationRoutes from  './routes/notification.routes.js';
+import reviewRoutes from './routes/review.routes.js';
 
 dotenv.config();
 
@@ -32,6 +33,7 @@ app.use('/api/horses', horseRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/reviews",reviewRoutes );
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,5 +1,5 @@
 import Booking from "../models/booking.model.js";
-import { createBookingService, getBookingByIdService, getAllBookingsService, updateBookingService, deleteBookingService, getBookingsByGuideIdService, getBookingsByRideIdService, getBookingsByUidService, getAllBookingsWithDetailsService, getBookingByIdWithDetailsService } from "../services/booking.service.js";
+import { createBookingService, getBookingByIdService, getAllBookingsService, updateBookingService, deleteBookingService, getBookingsByGuideIdService, getBookingsByRideIdService, getBookingsByUidService, getAllBookingsWithDetailsService, getBookingByIdWithDetailsService, storeQRCodeUrlService, changeRideStatusInBooking } from "../services/booking.service.js";
 
 export async function createBooking(req, res) {
     try {
@@ -107,6 +107,29 @@ export async function getByUid(req, res) {
         res.json(result);
     } catch (error) {
         console.error("Error fetching bookings by UID:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+export async function storeQRCodeUrl(req, res) {
+    try {
+        const { id } = req.params;
+        const result = await storeQRCodeUrlService(id);
+        res.json({ status:true ,qrCodeUrl: result });
+    } catch (error) {
+        console.error("Error store QR:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+export async function updateRideStatus(req, res) {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const result = await changeRideStatusInBooking(id, status);
+        res.json(result);
+    } catch (error) {
+        console.error("Error in update ride status in bookings:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 }

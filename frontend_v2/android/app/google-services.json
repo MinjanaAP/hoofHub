@@ -1,45 +1,37 @@
 {
   "project_info": {
-    "project_number": "790831491577",
-    "project_id": "hoofhub-70999",
-    "storage_bucket": "hoofhub-70999.firebasestorage.app"
+    "project_number": "239056007523",
+    "project_id": "hoofhub-4f4a7",
+    "storage_bucket": "hoofhub-4f4a7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:790831491577:android:829fdb4a7996ecbcf77528",
+        "mobilesdk_app_id": "1:239056007523:android:b412c3913f2cfe84d72356",
         "android_client_info": {
           "package_name": "com.example.frontend"
         }
       },
       "oauth_client": [
         {
-          "client_id": "790831491577-declfed4kcds23lgcpgnomrr3foeafic.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.example.frontend",
-            "certificate_hash": "2c41302510d0fb1416ac9b2839e1909cf051dcab"
-          }
-        },
-        {
-          "client_id": "790831491577-iunhufcfv8djt44t36amj816pavh9gip.apps.googleusercontent.com",
+          "client_id": "239056007523-opf5tb6s37jhj6sjqu8b6if9jal0nhvl.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAaJY3nRuxs2FAnURgbqqto7R-TaGr5fXU"
+          "current_key": "AIzaSyC7KGnkrP5BNY9Ik-Drl7l8wfjf7m28wxI"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "790831491577-iunhufcfv8djt44t36amj816pavh9gip.apps.googleusercontent.com",
+              "client_id": "239056007523-opf5tb6s37jhj6sjqu8b6if9jal0nhvl.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "790831491577-hh8bd1nic1l3go698mj0fnoavauhmtsk.apps.googleusercontent.com",
+              "client_id": "239056007523-cpv07qk1c2a65jk2p72oqt0vk4eqqe86.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
                 "bundle_id": "com.example.frontend"

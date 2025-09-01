@@ -5,11 +5,11 @@ import 'package:frontend/theme.dart';
 
 class HomeCarousel extends StatelessWidget {
   final List<String> imageUrls = [
-    "https://images.pexels.com/photos/3764466/pexels-photo-3764466.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    "https://images.pexels.com/photos/2980870/pexels-photo-2980870.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    "https://images.pexels.com/photos/1559388/pexels-photo-1559388.jpeg?_gl=1*1e6zd6v*_ga*MjExNTAwNzU1Ni4xNjY3NjU2ODM5*_ga_8JE65Q40S6*czE3NTU2MzE0MTkkbzYwJGcxJHQxNzU1NjMxNDQ5JGozMCRsMCRoMA..",
-    "https://images.pexels.com/photos/210260/pexels-photo-210260.jpeg?_gl=1*y4kmyv*_ga*MjExNTAwNzU1Ni4xNjY3NjU2ODM5*_ga_8JE65Q40S6*czE3NTU2MzE0MTkkbzYwJGcxJHQxNzU1NjMxNTAzJGo1OSRsMCRoMA..",
-    "https://images.pexels.com/photos/1364073/pexels-photo-1364073.jpeg?_gl=1*z1lwvw*_ga*MjExNTAwNzU1Ni4xNjY3NjU2ODM5*_ga_8JE65Q40S6*czE3NTU2MzE0MTkkbzYwJGcxJHQxNzU1NjMxNTYyJGo2MCRsMCRoMA..",
+    "assets/images/home-carousel-1.jpeg",
+    "assets/images/home-carousel-2.jpeg",
+    "assets/images/home-carousel-3.jpeg",
+    "assets/images/home-carousel-4.jpeg",
+    "assets/images/home-carousel-5.jpeg",
   ];
 
   HomeCarousel({super.key});
@@ -27,7 +27,7 @@ class HomeCarousel extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0),
                   image: DecorationImage(
-                    image: NetworkImage(url),
+                    image: AssetImage(url),
                     fit: BoxFit.cover,
                   ),
                 ),

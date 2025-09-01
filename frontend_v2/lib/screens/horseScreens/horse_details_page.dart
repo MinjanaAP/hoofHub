@@ -51,6 +51,7 @@ class _HorseDetailPageState extends State<HorseDetailPage> {
   Widget build(BuildContext context) {
     if (isLoading || horse == null) {
       return Scaffold(
+        appBar: const CustomAppBar(title: "hoofhub", showBackButton: true),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -67,6 +68,7 @@ class _HorseDetailPageState extends State<HorseDetailPage> {
             ],
           ),
         ),
+        bottomNavigationBar: const BottomNavBar()
       );
     }
 
@@ -161,26 +163,26 @@ class _HorseDetailPageState extends State<HorseDetailPage> {
                           ),
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.green.shade200,
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          "Rs. ${horse!['price'] ?? '8500'}",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green[800],
-                          ),
-                        ),
-                      ),
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(
+                      //       horizontal: 12, vertical: 6),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.green[50],
+                      //     borderRadius: BorderRadius.circular(12),
+                      //     border: Border.all(
+                      //       color: Colors.green.shade200,
+                      //       width: 1,
+                      //     ),
+                      //   ),
+                      //   child: Text(
+                      //     "Rs. ${horse!['price'] ?? '8500'}",
+                      //     style: TextStyle(
+                      //       fontSize: 16,
+                      //       fontWeight: FontWeight.bold,
+                      //       color: Colors.green[800],
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
 

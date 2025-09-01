@@ -5,6 +5,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:frontend/constant/api_constants.dart';
 import 'package:frontend/screens/BookingScreens/payment_result_page.dart';
 import 'package:frontend/screens/home_screen.dart';
+import 'package:frontend/services/api_service.dart';
 import 'package:http/http.dart' as http;
 
 class StripeServices {
@@ -15,10 +16,13 @@ class StripeServices {
     required int amount,
     required String bookingId,
     required String userId,
-    required BuildContext context, // Add context for navigation
+    required String riderId,
+    required String date,
+    required String time,
+    required String guideId,
+    required BuildContext context,
   }) async {
     try {
-      // 1. Create PaymentIntent on backend
       final clientSecret = await createPaymentIntent(amount);
       logger.d("Client Secret: $clientSecret");
 
@@ -26,17 +30,14 @@ class StripeServices {
         throw Exception("Failed to create Payment Intent");
       }
 
-      // 2. Initialize the payment sheet
       await Stripe.instance.initPaymentSheet(
           paymentSheetParameters: SetupPaymentSheetParameters(
         paymentIntentClientSecret: clientSecret,
         merchantDisplayName: "HoofHub",
       ));
 
-      // 3. Present the payment sheet to the user
       await _processPayment(clientSecret);
 
-      // 4. Update ride status in Firestore
       await FirebaseFirestore.instance
           .collection('bookings')
           .doc(bookingId)
@@ -46,7 +47,23 @@ class StripeServices {
         'paidAt': DateTime.now(),
       });
 
-      // 5. Show success page
+      //! generate and save qr
+      await saveQr(bookingId);
+
+      // ! Send notifications to rider and guide
+      await sendPaymentNotification(
+        riderId: userId,
+        guideId: guideId,
+        riderTitle: "Payment Successful",
+        riderDescription:
+            "Your payment of \$${(amount).toStringAsFixed(2)} for the ride on $date at $time has been successfully processed.",
+        guideTitle: "New Booking Payment Received",
+        guideDescription:
+            "You have received a payment of \$${(amount).toStringAsFixed(2)} for a booking scheduled on $date at $time.",
+      ).catchError((e) {
+        logger.e("Notification error, but continuing to result page: $e");
+      });
+
       _showPaymentResult(
         context: context,
         isSuccess: true,
@@ -54,10 +71,8 @@ class StripeServices {
         amount: amount.toDouble(),
       );
     } on StripeException catch (e) {
-      print("❌ Stripe error: ${e.error.localizedMessage}");
       logger.e("Stripe error: ${e.error.localizedMessage}");
-
-      // Show error page
+      // ! Show error page
       _showPaymentResult(
         context: context,
         isSuccess: false,
@@ -68,11 +83,14 @@ class StripeServices {
           amount: amount,
           bookingId: bookingId,
           userId: userId,
+          riderId: riderId,
+          date: date,
+          time: time,
+          guideId: guideId,
           context: context,
         ),
       );
     } catch (e) {
-      print("❌ Payment error: $e");
       logger.e("Payment error: $e");
 
       // Show error page
@@ -85,7 +103,11 @@ class StripeServices {
         onRetry: () => makePayment(
           amount: amount,
           bookingId: bookingId,
+          riderId: riderId,
           userId: userId,
+          date: date,
+          guideId: guideId,
+          time: time,
           context: context,
         ),
       );
@@ -156,15 +178,88 @@ class StripeServices {
   Future<void> _processPayment(String clientSecret) async {
     try {
       await Stripe.instance.presentPaymentSheet();
-      print("✅ Payment Successful");
+      logger.i(" Payment Successful");
     } on StripeException catch (e) {
-      print("❌ Stripe error: ${e.error.localizedMessage}");
       logger.e("Stripe error: ${e.error.localizedMessage}");
       rethrow;
     } catch (e) {
-      print("❌ Payment error: $e");
       logger.e("Payment error: $e");
       rethrow;
+    }
+  }
+
+  //? Send notifications for rider and guide
+  Future<void> sendPaymentNotification({
+    required String riderId,
+    required String guideId,
+    required String riderTitle,
+    required String riderDescription,
+    required String guideTitle,
+    required String guideDescription,
+  }) async {
+    try {
+      var requestData = {
+        "riderId": riderId,
+        "guideId": guideId,
+        "riderTitle": riderTitle,
+        "riderDescription": riderDescription,
+        "guideTitle": guideTitle,
+        "guideDescription": guideDescription,
+      };
+
+      logger.d("Sending notification with data: $requestData");
+
+      final response = await http.post(
+        Uri.parse(
+            '${ApiConstants.baseUrl}/notifications/notify-payment-success'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "riderId": riderId,
+          "guideId": guideId,
+          "riderTitle": riderTitle,
+          "riderDescription": riderDescription,
+          "guideTitle": guideTitle,
+          "guideDescription": guideDescription,
+        }),
+      );
+
+      print("Notification API response: ${response.body}");
+
+      final decoded = jsonDecode(response.body);
+
+      if (decoded['status'] == true || decoded['success'] == true) {
+        logger.i("✅ Notifications sent successfully: ${decoded['message']}");
+      } else {
+        logger.e("⚠️ Failed to send notification: ${decoded.toString()}");
+      }
+    } catch (e) {
+      logger.e("❌ Error sending notification: $e");
+    }
+  }
+
+  Future<String?> saveQr(String bookingId) async {
+    try {
+      final url = Uri.parse("${ApiConstants.baseUrl}/bookings/save-qr/$bookingId");
+      final response = await http.post(url);
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        if (data["status"] == true) {
+          logger.i("qr generated successfully");
+          return data["qrCodeUrl"];
+        } else {
+          logger.e("QR generated failed");
+          throw Exception("Failed: status is false");
+        }
+      } else {
+        logger.e("QR generated failed : ${response.statusCode}");
+        throw Exception("Failed with code: ${response.statusCode}");
+      }
+    } catch (e) {
+      logger.e("error saving QR : $e");
+      print("Error saving QR: $e");
+      return null;
     }
   }
 }

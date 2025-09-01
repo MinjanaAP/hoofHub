@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/common/custom_appbar.dart';
+import 'package:frontend/common/rider_Components/qr_code_display.dart';
 import 'package:frontend/constant/api_constants.dart';
+import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/skeletons/custom_loading_page.dart';
 import 'package:frontend/services/stripe_services.dart';
 import 'package:frontend/theme.dart';
@@ -26,7 +28,9 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   Map<String, dynamic>? _bookingData;
   String _errorMessage = '';
   late Map<String, dynamic> rideDetails;
-
+  late String rideDate;
+  late String rideTime;
+  late Map<String, dynamic> riderDetails;
   @override
   void initState() {
     super.initState();
@@ -42,6 +46,7 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
       // logger.e('Booking details response: ${response.body}');
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
+        logger.d("Booking details fetched: $data.guide");
         setState(() {
           _bookingData = data;
           _isLoading = false;
@@ -61,6 +66,26 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
         _errorMessage = 'Error fetching booking details: ${e.toString()}';
       });
       throw Exception('Failed to load booking details: $e');
+    }
+  }
+
+  void _showQRCodeDialog() {
+    final qrCodeUrl = _bookingData!['qrCodeUrl'] as String?;
+    final ride = _bookingData!['ride'] as Map<String, dynamic>;
+    final date = formatDate(_bookingData!['selectedDate']);
+    final time = formatTime(_bookingData!['selectedTime'] as String);
+
+    if (qrCodeUrl != null && qrCodeUrl.isNotEmpty) {
+      showDialog(
+        context: context,
+        builder: (context) => QRCodeDisplay(
+          qrData: qrCodeUrl,
+          bookingId: widget.bookingId,
+          rideName: ride['title'],
+          date: date,
+          time: time,
+        ),
+      );
     }
   }
 
@@ -140,9 +165,11 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
   }
 
   bool _shouldShowPaymentButton() {
+    final paymentStatus = _bookingData!['paymentStatus'] as String? ?? 'unpaid';
+    final isPaid = paymentStatus.toLowerCase() == 'paid';
 
     final status = _bookingData?['status']?.toString().toLowerCase() ?? '';
-    return status == 'confirmed' || status == 'paid';
+    return status == 'confirmed' && !isPaid;
   }
 
   Widget _buildBookingDetailsContent() {
@@ -150,11 +177,17 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
     rideDetails = ride;
     final guide = _bookingData!['guide'] as Map<String, dynamic>;
     final rider = _bookingData!['rider'] as Map<String, dynamic>;
+    riderDetails = rider;
     final status = (_bookingData!['status'] as String).toUpperCase();
     final date = formatDate(_bookingData!['selectedDate']);
+    rideDate = date;
     final time = formatTime(_bookingData!['selectedTime'] as String);
+    rideTime = time;
     final rideType = _bookingData!['rideType'] as String? ?? 'single';
     final rejectionReason = _bookingData!['rejectionReason'] as String?;
+    final paymentStatus = _bookingData!['paymentStatus'] as String? ?? 'unpaid';
+    final isPaid = paymentStatus.toLowerCase() == 'paid';
+    final qrCodeUrl = _bookingData!['qrCodeUrl'] as String?;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -162,8 +195,17 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Booking status card
-          _buildStatusCard(context, status, date, time, rejectionReason),
+          _buildStatusCard(
+              context, status, date, time, rejectionReason, isPaid),
           const SizedBox(height: 24),
+
+          if (_bookingData!['qrCodeUrl'] != null &&
+              (_bookingData!['qrCodeUrl'] as String).isNotEmpty &&
+              _bookingData!['paymentStatus'] == 'paid' && _bookingData!['status'] == 'confirmed') ...[
+            const SizedBox(height: 16),
+            _buildQRCodeAccessCard(),
+            const SizedBox(height: 16),
+          ],
 
           // Ride details section
           _buildSectionHeader('Ride Information'),
@@ -209,51 +251,100 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
     );
   }
 
-  Widget _buildStatusCard(BuildContext context, String status, String date,
-      String time, String? rejectionReason) {
+  Widget _buildStatusCard(
+    BuildContext context,
+    String status,
+    String date,
+    String time,
+    String? rejectionReason,
+    bool isPaid,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: getStatusColor(status).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: getStatusColor(status).withOpacity(0.3),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// --- Booking Status Row ---
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: getStatusColor(status),
-                  shape: BoxShape.circle,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: getStatusColor(status),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    status.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: getStatusColor(status),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                status.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: getStatusColor(status),
+
+              /// --- Payment Badge ---
+              if (isPaid)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.green.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.check_circle,
+                          color: Colors.green.shade600, size: 18),
+                      const SizedBox(width: 6),
+                      Text(
+                        "Paid",
+                        style: TextStyle(
+                          color: Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
-          const SizedBox(height: 8),
+
+          const SizedBox(height: 12),
+
+          /// --- Date & Time ---
           Text(
             '$date • $time',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: Colors.grey.shade700,
                 ),
           ),
-          const SizedBox(height: 8),
+
+          /// --- Rejection Reason ---
           if (rejectionReason != null &&
               rejectionReason.isNotEmpty &&
               status.toLowerCase() == 'rejected')
@@ -263,10 +354,71 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
                 rejectionReason,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Colors.red.shade700,
+                      fontWeight: FontWeight.w500,
                     ),
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQRCodeAccessCard() {
+    return GestureDetector(
+      onTap: _showQRCodeDialog,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: AppColors.primary.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.qr_code_scanner,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your QR Code is Ready',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                      fontSize: 16,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Tap to view your ride access QR code',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.primary,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -723,11 +875,14 @@ class _RiderBookingDetailsPageState extends State<RiderBookingDetailsPage> {
         onPressed: () async {
           try {
             await StripeServices.instance.makePayment(
-              amount: rideDetails['price'] as int,
-              bookingId: widget.bookingId,
-              userId: user?.uid ?? '',
-              context: context
-            );
+                amount: rideDetails['price'] as int,
+                bookingId: widget.bookingId,
+                riderId: riderDetails['id'].toString(),
+                userId: user?.uid ?? '',
+                date: rideDate,
+                time: rideTime,
+                guideId: _bookingData!['guideId'].toString(),
+                context: context);
           } catch (e) {
             print("Payment failed: $e");
           }
