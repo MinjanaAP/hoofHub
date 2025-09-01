@@ -1,5 +1,8 @@
+import { FieldValue } from "firebase-admin/firestore";
 import { db } from "../config/firebase.js";
 import sendNotification from "../utils/sendNotification.js";
+import { sendNotificationToUserByRole } from "./notification.service.js";
+import { generateAndUploadSecureQR } from "./qr.service.js";
 
 const collection = db.collection("bookings");
 
@@ -282,3 +285,45 @@ export async function getBookingsByUidService(uid) {
     }
 }
 
+export async function storeQRCodeUrlService(bookingId) {
+    try {
+        const qrUrl = await generateAndUploadSecureQR(bookingId);
+        await collection.doc(bookingId).update({ qrCodeUrl: qrUrl });
+        return qrUrl;
+    } catch (error) {
+        console.error("Error save QR code ", error);
+        throw new Error("Error save QR code" + error.message);
+    }
+}
+
+export const changeRideStatusInBooking = async (bookingId, status) => {
+    try {
+        const bookingRef = collection.doc(bookingId);
+        const bookingDoc = await bookingRef.get();
+        if (!bookingDoc.exists) throw new Error("Booking not found");
+        await bookingRef.update({ rideStatus: status });
+        const booking = bookingDoc.data();
+
+        const rideRef = db.collection("rides").doc(booking.rideId);
+        const rideDoc = await rideRef.get();
+        if (!rideDoc.exists) throw new Error("Ride not found");
+        const ride = rideDoc.data();
+
+        const riderId = booking.uid;
+        const riderRef = db.collection("riders").doc(riderId);
+        const notificationResult = await sendNotificationToUserByRole(riderId, 'rider', `Your ride is ${status}`, `Your ride ${ride.title} is ${status} now`, { bookingId, rideId: booking.rideId }, '/ongoingRidePage');
+
+        if (status === 'completed') {
+            await bookingRef.update({ completedAt: new Date().toISOString() });
+            await bookingRef.update({ status: 'completed' });
+            await riderRef.update({
+                hoofcoins: FieldValue.increment(50)
+            });
+        }
+
+        return { success: true, notificationResult };
+    } catch (error) {
+        console.error("Error updating rideStatus in booking:", error);
+        throw new Error("Error updating rideStatus in booking: " + error.message);
+    }
+}

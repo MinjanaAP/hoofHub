@@ -10,11 +10,15 @@ import 'package:frontend/screens/guideScreens/guide_home.dart';
 import 'package:frontend/screens/guideScreens/guide_login.dart';
 import 'package:frontend/screens/guideScreens/guide_page.dart';
 import 'package:frontend/screens/guideScreens/guide_signup.dart';
+import 'package:frontend/screens/guideScreens/guide_bookings_page.dart';
+import 'package:frontend/screens/guideScreens/ride_start_page.dart';
+import 'package:frontend/screens/guideScreens/scan_qr_page.dart';
 import 'package:frontend/screens/home_screen.dart';
 import 'package:frontend/screens/horseScreens/horse_details_page.dart';
 
 import 'package:frontend/screens/landing_page.dart';
 import 'package:frontend/screens/ride_page.dart';
+import 'package:frontend/screens/riderScreens/ongoingRidePage.dart';
 import 'package:frontend/screens/riderScreens/rider_booking_page.dart';
 import 'package:frontend/screens/riderScreens/rider_login.dart';
 import 'package:frontend/screens/riderScreens/rider_profile.dart';
@@ -30,11 +34,15 @@ class AppRoutes {
   static const String riderProfile = '/riderProfile';
   static const String riderHome = '/riderHome';
   static const String riderBookings = '/riderBookings';
+  static const String ongoingRidePage = '/ongoingRidePage';
 
   //? Guide Routes
   static const String guideSignup = '/guideSignup';
   static const String guideLogin = '/guideLogin';
   static const String guidePage = '/guidePage';
+  static const String guideBookingPage = '/guideBookingsPage';
+  static const String scanQRPage = '/scanQRPage';
+  static const String rideStart = '/rideStart';
 
   //? Horse routes
   static const String horseDetails = '/horseDetails';
@@ -67,12 +75,16 @@ class AppRoutes {
     riderProfile: (context) => RiderProfile(),
     riderHome: (context) => const HomeScreen(),
     riderBookings: (context) => const RiderBookingsPage(),
+    ongoingRidePage: (context) => const OngoingRidePage(),
 
     //? Guide Routes
     guideSignup: (context) => const GuideSignup(),
     guideLogin: (context) => const GuideLogin(),
     guidePage: (context) => const GuidePage(),
     guideHome: (context) => const GuideHome(),
+    guideBookingPage: (context) => const GuideBookingsPage(),
+    scanQRPage: (context) => const ScanQRPage(),
+    rideStart: (context) => const RideStartPage(apiResponse: {}),
 
     //? Horse Routes
     horseDetails: (context) =>
@@ -93,6 +105,6 @@ class AppRoutes {
     waitForGuide: (context) => const WaitingForGuidePage(),
 
     //? auth routes
-    forgotPassword : (context) => const ForgotPassword(),
+    forgotPassword: (context) => const ForgotPassword(),
   };
 }

@@ -41,46 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBIjGlOzK8MRIiFMwrMNZBDJ0nefjTbL6o',
-    appId: '1:790831491577:web:f9911818d0818147f77528',
-    messagingSenderId: '790831491577',
-    projectId: 'hoofhub-70999',
-    authDomain: 'hoofhub-70999.firebaseapp.com',
-    storageBucket: 'hoofhub-70999.firebasestorage.app',
+    apiKey: 'AIzaSyBfgMUDlsSmn9tWFf_dtCdS1GM3UKIt1Go',
+    appId: '1:239056007523:web:2a91586ab7ed9fe3d72356',
+    messagingSenderId: '239056007523',
+    projectId: 'hoofhub-4f4a7',
+    authDomain: 'hoofhub-4f4a7.firebaseapp.com',
+    storageBucket: 'hoofhub-4f4a7.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAaJY3nRuxs2FAnURgbqqto7R-TaGr5fXU',
-    appId: '1:790831491577:android:829fdb4a7996ecbcf77528',
-    messagingSenderId: '790831491577',
-    projectId: 'hoofhub-70999',
-    storageBucket: 'hoofhub-70999.firebasestorage.app',
+    apiKey: 'AIzaSyC7KGnkrP5BNY9Ik-Drl7l8wfjf7m28wxI',
+    appId: '1:239056007523:android:b412c3913f2cfe84d72356',
+    messagingSenderId: '239056007523',
+    projectId: 'hoofhub-4f4a7',
+    storageBucket: 'hoofhub-4f4a7.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDa33AJLp_4OmN1MMC3FcjzMMSKSF6EWGs',
-    appId: '1:790831491577:ios:6cb2d33297ce198ff77528',
-    messagingSenderId: '790831491577',
-    projectId: 'hoofhub-70999',
-    storageBucket: 'hoofhub-70999.firebasestorage.app',
+    apiKey: 'AIzaSyDI0LElHg5mw1h912rncaClgS-XZHhA7tU',
+    appId: '1:239056007523:ios:de9711abd7edef09d72356',
+    messagingSenderId: '239056007523',
+    projectId: 'hoofhub-4f4a7',
+    storageBucket: 'hoofhub-4f4a7.firebasestorage.app',
+    iosClientId: '239056007523-cpv07qk1c2a65jk2p72oqt0vk4eqqe86.apps.googleusercontent.com',
     iosBundleId: 'com.example.frontend',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDa33AJLp_4OmN1MMC3FcjzMMSKSF6EWGs',
-    appId: '1:790831491577:ios:6cb2d33297ce198ff77528',
-    messagingSenderId: '790831491577',
-    projectId: 'hoofhub-70999',
-    storageBucket: 'hoofhub-70999.firebasestorage.app',
+    apiKey: 'AIzaSyDI0LElHg5mw1h912rncaClgS-XZHhA7tU',
+    appId: '1:239056007523:ios:de9711abd7edef09d72356',
+    messagingSenderId: '239056007523',
+    projectId: 'hoofhub-4f4a7',
+    storageBucket: 'hoofhub-4f4a7.firebasestorage.app',
+    iosClientId: '239056007523-cpv07qk1c2a65jk2p72oqt0vk4eqqe86.apps.googleusercontent.com',
     iosBundleId: 'com.example.frontend',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBIjGlOzK8MRIiFMwrMNZBDJ0nefjTbL6o',
-    appId: '1:790831491577:web:bb10c74937f3450bf77528',
-    messagingSenderId: '790831491577',
-    projectId: 'hoofhub-70999',
-    authDomain: 'hoofhub-70999.firebaseapp.com',
-    storageBucket: 'hoofhub-70999.firebasestorage.app',
+    apiKey: 'AIzaSyBfgMUDlsSmn9tWFf_dtCdS1GM3UKIt1Go',
+    appId: '1:239056007523:web:7a40f6ef475dadced72356',
+    messagingSenderId: '239056007523',
+    projectId: 'hoofhub-4f4a7',
+    authDomain: 'hoofhub-4f4a7.firebaseapp.com',
+    storageBucket: 'hoofhub-4f4a7.firebasestorage.app',
   );
+
 }

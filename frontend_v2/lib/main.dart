@@ -8,6 +8,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:frontend/common/foreground_alert.dart';
 import 'package:frontend/constant/stripe_constants.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'package:frontend/constant/api_constants.dart';
@@ -22,7 +23,7 @@ import 'package:frontend/screens/splash_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void showForegroundDialog(String? title, String? body) {
+void showForegroundDialog(String? title, String? body, String? routeName, String? bookingId) {
   if (navigatorKey.currentContext != null) {
     // showDialog(
     //   context: navigatorKey.currentContext!,
@@ -44,11 +45,17 @@ void showForegroundDialog(String? title, String? body) {
       body: body ?? 'You have a new update.',
       buttonText: 'OK',
       onConfirm: () {
-        Navigator.pushAndRemoveUntil(
-          navigatorKey.currentContext!,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false,
-        );
+        if (routeName != null && routeName.isNotEmpty) {
+          Navigator.pushNamed(
+            navigatorKey.currentContext!,
+            routeName,
+            arguments: {"bookingId": bookingId},
+          );
+        } else {
+          if (Navigator.of(navigatorKey.currentContext!).canPop()) {
+            Navigator.of(navigatorKey.currentContext!).pop();
+          }
+        }
       },
     );
   }
@@ -68,9 +75,16 @@ void main() async {
   // 🔊 Listen to messages when app is in foreground
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
     if (message.notification != null) {
+      final routeName = message.data['route'];
+      final bookingId = message.data['bookingId'];
+
+      logger.e(message.data);
+
       showForegroundDialog(
         message.notification!.title,
         message.notification!.body,
+        routeName,
+        bookingId
       );
     }
   });
