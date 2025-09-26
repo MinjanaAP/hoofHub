@@ -1,4 +1,4 @@
-import { addReview } from "../services/review.service.js";
+import { addReview, getReviewsByGuideIdService } from "../services/review.service.js";
 
 export async function addReviews(req, res) {
     try {
@@ -20,6 +20,21 @@ export async function addReviews(req, res) {
         res.status(201).json({ success: true, review });
     } catch (error) {
         console.error("Error in addReview:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+export async function getReviewsByGuideId(req, res) {
+    try {
+        const { guideId } = req.params;
+        if (!guideId) {
+            return res.status(400).json({ message: "guideId is required" });
+        }
+        const reviews  = await getReviewsByGuideIdService(guideId);
+        res.status(200).json({ success: true, reviews });
+
+    } catch (error) {
+        console.error("Error in getReviewsByGuideId:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 }

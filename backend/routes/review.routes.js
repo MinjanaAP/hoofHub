@@ -1,7 +1,8 @@
 import { Router } from 'express';
 const router = Router();
-import { addReviews } from '../controllers/review.controller.js';
+import { addReviews, getReviewsByGuideId } from '../controllers/review.controller.js';
 
 router.post('/', addReviews);
+router.get('/for-guide/:guideId', getReviewsByGuideId);
 
 export default router;
