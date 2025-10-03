@@ -6,7 +6,7 @@ import { getAllRiders, getUserProfile, registerRider } from "../controllers/ride
 const router = express.Router();
 
 router.post("/register", registerRider);
-router.get("/profile", authMiddleware, getUserProfile);
+router.get("/profile/:id", getUserProfile);
 router.get("/", getAllRiders);
 
 
