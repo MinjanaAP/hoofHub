@@ -41,7 +41,7 @@ export const registerRider = async (req , res )=>{
 
 export const getUserProfile = async (req, res)=>{
     try {
-        const riderDoc = await db.collection("riders").doc(req.user.uid).get();
+        const riderDoc = await db.collection("riders").doc(req.params.id).get();
         if(!riderDoc){
             return res.status(404).json({status: false , error: "User not Found."});
         }
