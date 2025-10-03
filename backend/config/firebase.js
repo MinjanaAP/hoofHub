@@ -17,4 +17,4 @@ const auth = admin.auth();
 const messaging =  admin.messaging(); 
 
 // module.exports = { db, auth };
-export { db, auth, messaging };
+export { db, auth, messaging, admin };
